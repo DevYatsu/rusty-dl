@@ -1,6 +1,6 @@
 use std::time::Instant;
 
-use downloading::{prelude::*, twitter::TwitterDownloader};
+use downloading::prelude::*;
 
 #[tokio::main]
 async fn main() -> Result<(), DownloadError> {

@@ -45,6 +45,7 @@ pub trait Downloader {
 
 pub mod prelude {
     pub use crate::errors::DownloadError;
+    pub use crate::twitter::TwitterDownloader;
     pub use crate::youtube::YoutubeDownloader;
     pub use crate::Downloader;
 }

@@ -20,7 +20,7 @@ pub struct TwitterDownloader {
 }
 
 use self::{details::TweetDetails, utils::RequestDetails};
-use serde::{de, Deserialize};
+use serde::Deserialize;
 
 #[derive(Debug, Deserialize)]
 struct GuestTokenResponse {
@@ -34,8 +34,10 @@ impl TwitterDownloader {
             Some("https://www.twitter.com/<USERNAME>/status/<TWEET_ID>"),
         )?;
 
-        if url.host() != Some(url::Host::Domain("twitter.com"))
-            && url.host() != Some(url::Host::Domain("x.com"))
+        if url.domain() != Some("twitter.com")
+            && url.domain() != Some("x.com")
+            && url.domain() != Some("www.twitter.com")
+            && url.domain() != Some("www.x.com")
         {
             return Err(DownloadError::InvalidUrl(
                 "Invalid URL! The domain must be either 'www.twitter.com' or 'www.x.com'."

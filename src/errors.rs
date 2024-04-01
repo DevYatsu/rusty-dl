@@ -11,19 +11,21 @@ pub enum DownloadError {
     FailedToBuildBlockingRuntime(String),
 
     TwitterError(String),
+    YoutubeError(String),
 }
 
 impl fmt::Display for DownloadError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            Self::Reqwest(err) => write!(f, "{}", err),
-            Self::Video(err) => write!(f, "{}", err),
-            Self::IoError(err) => write!(f, "{}", err),
-            Self::ParseError(err) => write!(f, "{}", err),
-            Self::InvalidUrl(err) => write!(f, "{}", err),
-            Self::VideoNotFound(err) => write!(f, "{}", err),
-            Self::FailedToBuildBlockingRuntime(err) => write!(f, "{}", err),
+            DownloadError::Reqwest(err) => write!(f, "{}", err),
+            DownloadError::Video(err) => write!(f, "{}", err),
+            DownloadError::IoError(err) => write!(f, "{}", err),
+            DownloadError::ParseError(err) => write!(f, "{}", err),
+            DownloadError::InvalidUrl(err) => write!(f, "{}", err),
+            DownloadError::VideoNotFound(err) => write!(f, "{}", err),
+            DownloadError::FailedToBuildBlockingRuntime(err) => write!(f, "{}", err),
             DownloadError::TwitterError(err) => write!(f, "{}", err),
+            DownloadError::YoutubeError(err) => write!(f, "{}", err),
         }
     }
 }
@@ -31,14 +33,15 @@ impl fmt::Display for DownloadError {
 impl error::Error for DownloadError {
     fn source(&self) -> Option<&(dyn error::Error + 'static)> {
         match self {
-            Self::Reqwest(err) => Some(err),
-            Self::Video(err) => Some(err),
-            Self::IoError(err) => Some(err),
-            Self::ParseError(err) => Some(err),
-            Self::InvalidUrl(_) => None,
-            Self::VideoNotFound(_) => None,
-            Self::FailedToBuildBlockingRuntime(_) => None,
+            DownloadError::Reqwest(err) => Some(err),
+            DownloadError::Video(err) => Some(err),
+            DownloadError::IoError(err) => Some(err),
+            DownloadError::ParseError(err) => Some(err),
+            DownloadError::InvalidUrl(_) => None,
+            DownloadError::VideoNotFound(_) => None,
+            DownloadError::FailedToBuildBlockingRuntime(_) => None,
             DownloadError::TwitterError(_) => None,
+            DownloadError::YoutubeError(_) => None,
         }
     }
 }
