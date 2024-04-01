@@ -1,16 +1,16 @@
 use crate::{
     prelude::{DownloadError, Downloader},
-    twitter::utils::retrieve_request_details,
+    twitter::utils::{retrieve_request_details, ErrorResponse},
 };
-use percent_encoding::{utf8_percent_encode, AsciiSet, CONTROLS, NON_ALPHANUMERIC};
+use percent_encoding::{utf8_percent_encode, NON_ALPHANUMERIC};
 use regex::Regex;
 use reqwest::{
     header::{HeaderMap, HeaderValue},
-    Client, Url,
+    Client, Response, Url,
 };
 
+mod details;
 mod utils;
-
 #[derive(Debug, PartialEq, PartialOrd, Ord, Eq, Clone)]
 /// The `TwitterDownloader` is simply an implementation of [twitter_video-dl](https://github.com/inteoryx/twitter-video-dl.git) repository ported to rust!
 pub struct TwitterDownloader {
@@ -19,8 +19,8 @@ pub struct TwitterDownloader {
     status_id: String,
 }
 
-use self::utils::RequestDetails;
-use serde::Deserialize;
+use self::{details::TweetDetails, utils::RequestDetails};
+use serde::{de, Deserialize};
 
 #[derive(Debug, Deserialize)]
 struct GuestTokenResponse {
@@ -43,11 +43,11 @@ impl TwitterDownloader {
             ));
         }
 
-        let pattern = r"https://twitter|x\.com/([^/]+)/status/(\d+)";
+        let pattern = r"https://(twitter|x)\.com/([^/]+)/status/(\d+)";
         let url_regex = Regex::new(pattern).unwrap();
 
         if let Some(captures) = url_regex.captures(url.as_str()) {
-            if let (Some(status_id), Some(tweet_id)) = (captures.get(1), captures.get(2)) {
+            if let (Some(status_id), Some(tweet_id)) = (captures.get(2), captures.get(3)) {
                 let status_id = status_id.as_str().to_owned();
                 let tweet_id = tweet_id.as_str().to_owned();
                 return Ok(Self {
@@ -181,27 +181,25 @@ impl TwitterDownloader {
 
         variables.set_tweet_id(self.tweet_id().to_owned());
 
+        // Features and Variables structs serialized
         let features_string = serde_json::to_string(&features).unwrap();
         let variables_string = serde_json::to_string(&variables).unwrap();
-        // let features_encoded = serde_urlencoded::to_string(features).unwrap();
-        // let variables_encoded = serde_urlencoded::to_string(variables).unwrap();
 
         // URL-encode the JSON string
         let features_encoded = utf8_percent_encode(&features_string, NON_ALPHANUMERIC).to_string();
         let variables_encoded =
             utf8_percent_encode(&variables_string, NON_ALPHANUMERIC).to_string();
 
-        let url = format!("https://twitter.com/i/api/graphql/wTXkouwCKcMNQtY-NcDgAA/TweetDetail?variables={}&features={}", variables_encoded, features_encoded);
+        let url = format!("https://twitter.com/i/api/graphql/ncDeACNGIApPMaqGVuF_rw/TweetResultByRestId?variables={}&features={}", variables_encoded, features_encoded);
 
-        println!("{}", url);
         Ok(url)
     }
 
-    async fn get_tweet_details(
+    async fn details_req(
         &self,
         bearer_token: &str,
         guest_token: &str,
-    ) -> Result<(), DownloadError> {
+    ) -> Result<Response, DownloadError> {
         let url = self.get_details_url().await?;
 
         let client = Client::new();
@@ -218,19 +216,66 @@ impl TwitterDownloader {
 
         let details = client.get(url).headers(headers).send().await?;
 
-        println!("status:: {}", details.status());
+        Ok(details)
+    }
 
-        Ok(())
+    async fn get_tweet_details(
+        &self,
+        bearer_token: &str,
+        guest_token: &str,
+    ) -> Result<TweetDetails, DownloadError> {
+        let mut details = self.details_req(bearer_token, guest_token).await?;
+
+        let mut try_count = 1;
+        let max_tries = 11;
+
+        // need to update the loop to automatically add new variables if needed when the variables change server side
+        loop {
+            if details.status() != 400 || try_count >= max_tries {
+                break;
+            }
+
+            let details_status = details.status();
+            let details_text = details.text().await?;
+            println!("status {}, text: {}", details_status, details_text);
+
+            let err_content: ErrorResponse = serde_json::from_str(&details_text).map_err(|_| {
+                DownloadError::TwitterError(format!(
+                    "Failed to parse json from details error, details text: `{details_text}`"
+                ))
+            })?;
+
+            println!("{:?}", err_content);
+
+            let needed_variable_pattern = Regex::new(r"Variable '([^']+)'").unwrap();
+            let needed_features_pattern =
+                Regex::new(r#"The following features cannot be null: ([^"]+)"#).unwrap();
+
+            details = self.details_req(bearer_token, guest_token).await?;
+            try_count += 1;
+        }
+
+        if details.status() != 200 {
+            return Err(DownloadError::TwitterError(
+                "Failed to get tweet details.".to_owned(),
+            ));
+        }
+
+        let response_text = details.text().await?;
+        let tweet_details = serde_json::from_str(&response_text).map_err(|_| {
+            DownloadError::TwitterError("Failed to parse tweet details.".to_owned())
+        })?;
+
+        Ok(tweet_details)
     }
 }
 
 impl Downloader for TwitterDownloader {
     async fn download(&self) -> Result<(), DownloadError> {
         let (bearer_token, guest_token) = self.get_tokens().await?;
-        let status_id = self.status_id();
 
         let tweet_details = self.get_tweet_details(&bearer_token, &guest_token).await?;
-        println!("status_id: {status_id}");
+        println!("details: {:?}", tweet_details);
 
         todo!()
     }

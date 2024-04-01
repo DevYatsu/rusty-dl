@@ -1,6 +1,6 @@
+use crate::prelude::DownloadError;
 use serde::{Deserialize, Serialize};
 use tokio::{fs::File, io::AsyncReadExt};
-use crate::prelude::DownloadError;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct RequestDetails {
@@ -26,7 +26,6 @@ pub async fn retrieve_request_details() -> Result<RequestDetails, DownloadError>
 
     Ok(request_details)
 }
-
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Features {
@@ -63,11 +62,41 @@ pub struct Variables {
     withReactionsPerspective: bool,
     withVoice: bool,
     withV2Timeline: bool,
-    focalTweetId: Option<String>
+    tweetId: Option<String>,
 }
 
 impl Variables {
     pub fn set_tweet_id(&mut self, tweet_id: String) {
-        self.focalTweetId = Some(tweet_id)
+        self.tweetId = Some(tweet_id)
     }
+}
+
+#[derive(Debug, serde::Deserialize)]
+pub struct ErrorResponse {
+    errors: Vec<Error>,
+}
+
+#[derive(Debug, serde::Deserialize)]
+struct Error {
+    message: String,
+    extensions: Extension,
+    code: u32,
+    kind: String,
+    name: String,
+    source: String,
+    tracing: Trace,
+}
+
+#[derive(Debug, serde::Deserialize)]
+struct Extension {
+    name: String,
+    source: String,
+    code: u32,
+    kind: String,
+    tracing: Trace,
+}
+
+#[derive(Debug, serde::Deserialize)]
+struct Trace {
+    trace_id: String,
 }
