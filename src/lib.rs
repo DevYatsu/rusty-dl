@@ -1,10 +1,25 @@
 pub mod errors;
+pub mod twitter;
 pub mod youtube;
 
 use crate::errors::DownloadError;
 use tokio::runtime::Builder;
+use url::Url;
 
 pub trait Downloader {
+    fn parse_url(link: &str, expected_url_format: Option<&str>) -> Result<Url, DownloadError> {
+        let expected_format =
+            expected_url_format.unwrap_or("https://www.<domain>.<extension>/<parameters>");
+        let url = Url::parse(link).map_err(|_| {
+            DownloadError::InvalidUrl(
+                format!("Invalid URL format! Please provide a URL in the format: {expected_format}. Ensure the URL includes a valid domain, extension, and any necessary parameters.")
+                    ,
+            )
+        })?;
+
+        Ok(url)
+    }
+
     fn download(&self) -> impl std::future::Future<Output = Result<(), DownloadError>> + Send
     where
         Self: Sync;

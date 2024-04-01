@@ -9,6 +9,8 @@ pub enum DownloadError {
     InvalidUrl(String),
     VideoNotFound(String),
     FailedToBuildBlockingRuntime(String),
+
+    TwitterError(String),
 }
 
 impl fmt::Display for DownloadError {
@@ -21,6 +23,7 @@ impl fmt::Display for DownloadError {
             Self::InvalidUrl(err) => write!(f, "{}", err),
             Self::VideoNotFound(err) => write!(f, "{}", err),
             Self::FailedToBuildBlockingRuntime(err) => write!(f, "{}", err),
+            DownloadError::TwitterError(err) => write!(f, "{}", err),
         }
     }
 }
@@ -35,6 +38,7 @@ impl error::Error for DownloadError {
             Self::InvalidUrl(_) => None,
             Self::VideoNotFound(_) => None,
             Self::FailedToBuildBlockingRuntime(_) => None,
+            DownloadError::TwitterError(_) => None,
         }
     }
 }

@@ -8,9 +8,12 @@ keywords = ["download", "downloader", "youtube"]
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-rayon = "1.10.0"
-reqwest = "0.12.2"
+percent-encoding = "2.3.1"
+regex = "1.10.4"
+reqwest = {features = ["multipart"], version = "0.12.2"}
 rusty_ytdl =  {features = ["blocking"], version = "0.7.1"}
+serde = {version = "1.0.197", features = ["derive"]}
 serde_json = "1.0.115"
+serde_urlencoded = "0.7.1"
 tokio = {features = ["full"], version =  "1.37.0"}
 url = "2.5.0"

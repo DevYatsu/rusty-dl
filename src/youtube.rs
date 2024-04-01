@@ -11,12 +11,13 @@ pub struct YoutubeDownloader {
 
 impl YoutubeDownloader {
     pub fn new(link: &str) -> Result<Self, DownloadError> {
-        let url = Url::parse(link).map_err(|_| {
-            DownloadError::InvalidUrl(
-                "Invalid Url! Expected Url with format: `https://www.youtube.com/watch?v=VIDEO_ID`"
-                    .to_owned(),
-            )
-        })?;
+        let url = Self::parse_url(link, Some("https://www.youtube.com/v=<VIDEO_ID>"))?;
+
+        if url.host() != Some(url::Host::Domain("youtube.com")) {
+            return Err(DownloadError::InvalidUrl(
+                "Invalid URL! The domain must be 'www.youtube.com'.".to_owned(),
+            ));
+        }
 
         Ok(Self { url })
     }
@@ -41,10 +42,7 @@ impl Downloader for YoutubeDownloader {
         Ok(())
     }
 
-    fn blocking_download(&self) -> Result<(), DownloadError>
-    where
-        Self: Sync,
-    {
+    fn blocking_download(&self) -> Result<(), DownloadError> {
         let video_options = VideoOptions {
             quality: VideoQuality::Highest,
             filter: VideoSearchOptions::VideoAudio,
