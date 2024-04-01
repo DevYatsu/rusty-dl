@@ -262,7 +262,9 @@ impl TwitterDownloader {
         }
 
         let response_text = details.text().await?;
-        let tweet_details = serde_json::from_str(&response_text).map_err(|_| {
+        let tweet_details = serde_json::from_str(&response_text).map_err(|e| {
+            println!("{}", response_text);
+            println!("{:?}", e);
             DownloadError::TwitterError("Failed to parse tweet details.".to_owned())
         })?;
 
@@ -275,8 +277,10 @@ impl Downloader for TwitterDownloader {
         let (bearer_token, guest_token) = self.get_tokens().await?;
 
         let tweet_details = self.get_tweet_details(&bearer_token, &guest_token).await?;
-        println!("details: {:?}", tweet_details);
 
-        todo!()
+        // medias contain all the informations regarding the tweet videos and images
+        let medias = tweet_details.data.tweet_result.result.legacy.entities.media;
+
+        Ok(())
     }
 }
