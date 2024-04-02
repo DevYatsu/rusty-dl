@@ -1,4 +1,4 @@
-use std::{path::Path, time::Instant};
+use std::{time::Instant};
 
 use downloading::prelude::*;
 
