@@ -1,3 +1,5 @@
+use std::path::{Path, PathBuf};
+
 use reqwest::Url;
 use rusty_ytdl::{blocking, FFmpegArgs};
 use rusty_ytdl::{VideoOptions, VideoQuality, VideoSearchOptions};
@@ -15,7 +17,11 @@ impl YoutubeDownloader {
     pub fn new(link: &str) -> Result<Self, DownloadError> {
         let url = Self::parse_url(link, Some("https://www.youtube.com/v=<VIDEO_ID>"))?;
 
-        if url.domain() != Some("www.youtube.com") && url.domain() != Some("youtube.com") {
+        if url.domain() != Some("www.youtube.com")
+            && url.domain() != Some("youtube.com")
+            && url.domain() != Some("www.youtu.be")
+            && url.domain() != Some("youtu.be")
+        {
             return Err(DownloadError::InvalidUrl(
                 "Invalid URL! The domain must be 'youtube.com'.".to_owned(),
             ));
@@ -51,7 +57,7 @@ impl YoutubeDownloader {
 }
 
 impl Downloader for YoutubeDownloader {
-    async fn download(&self) -> Result<(), DownloadError> {
+    async fn download_to(&self, path: &Path) -> Result<(), DownloadError> {
         let filter = if self.to_mp3 {
             VideoSearchOptions::Audio
         } else {
@@ -67,7 +73,10 @@ impl Downloader for YoutubeDownloader {
             .map_err(|_| DownloadError::VideoNotFound("Video Not Found".to_owned()))?;
         let video_info = video.get_basic_info().await?;
 
-        let title = video_info.video_details.title.replace(" ", "_");
+        let base_path: PathBuf = path.into();
+
+        let new_path = base_path.join(video_info.video_details.title.replace(" ", "_"));
+        let title = new_path.display();
 
         match &filter {
             VideoSearchOptions::VideoAudio => video.download(format!("{title}.mp4")).await?,

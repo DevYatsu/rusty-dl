@@ -275,7 +275,7 @@ impl TwitterDownloader {
 }
 
 impl Downloader for TwitterDownloader {
-    async fn download(&self) -> Result<(), DownloadError> {
+    async fn download_to(&self, path: &std::path::Path) -> Result<(), DownloadError> {
         let (bearer_token, guest_token) = self.get_tokens().await?;
 
         let tweet_details = self.get_tweet_details(&bearer_token, &guest_token).await?;

@@ -20,7 +20,19 @@ pub trait Downloader {
         Ok(url)
     }
 
+    /// A function to download the file inside of the folder in which the program is called.
     fn download(&self) -> impl std::future::Future<Output = Result<(), DownloadError>> + Send
+    where
+        Self: Sync,
+    {
+        self.download_to(&std::path::Path::new("./"))
+    }
+
+    /// A function to download the file to a given folder, where path is a folder.
+    fn download_to(
+        &self,
+        path: &std::path::Path,
+    ) -> impl std::future::Future<Output = Result<(), DownloadError>> + Send
     where
         Self: Sync;
 
@@ -40,6 +52,24 @@ pub trait Downloader {
 
         // Block the current thread until the download completes
         rt.block_on(async { self.download().await })
+    }
+
+    fn blocking_download_to(&self, path: &std::path::Path) -> Result<(), DownloadError>
+    where
+        Self: Sync,
+    {
+        // Create a multi-threaded Tokio runtime with the default number of worker threads
+        let rt = Builder::new_multi_thread()
+            .enable_all()
+            .build()
+            .map_err(|_| {
+                DownloadError::FailedToBuildBlockingRuntime(
+                    "Failed to build blocking runtime".to_owned(),
+                )
+            })?;
+
+        // Block the current thread until the download completes
+        rt.block_on(async { self.download_to(path).await })
     }
 }
 

@@ -1,4 +1,4 @@
-use std::time::Instant;
+use std::{path::Path, time::Instant};
 
 use downloading::prelude::*;
 
@@ -8,10 +8,11 @@ async fn main() -> Result<(), DownloadError> {
         .nth(1)
         .expect("expected a link passed as argument");
 
-    let downloader = TwitterDownloader::new(&link)?;
+    let downloader = YoutubeDownloader::new(&link)?;
 
     let start = Instant::now();
-    downloader.download().await?;
+
+    downloader.download_to(&Path::new("./src")).await?;
 
     println!("it took {} seconds!", start.elapsed().as_secs_f64());
 
