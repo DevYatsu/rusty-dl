@@ -12,9 +12,7 @@ async fn main() -> Result<(), DownloadError> {
 
     let start = Instant::now();
 
-    downloader
-        .download_to(&Path::new("/Users/Yanis/Downloads/"))
-        .await?;
+    downloader.download().await?;
 
     println!("it took {} seconds!", start.elapsed().as_secs_f64());
 
