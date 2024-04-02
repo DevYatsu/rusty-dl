@@ -6,7 +6,18 @@ use crate::errors::DownloadError;
 use tokio::runtime::Builder;
 use url::Url;
 
+/// A trait representing a downloader.
 pub trait Downloader {
+    /// Parses the provided URL string into a `Url` struct.
+    ///
+    /// ### Arguments
+    ///
+    /// * `link` - The URL string to parse.
+    /// * `expected_url_format` - Optional expected URL format to use for parsing. Defaults to `"https://www.<domain>.<extension>/<parameters>"`.
+    ///
+    /// ### Returns
+    ///
+    /// Returns a `Result` containing the parsed `Url` on success, or a `DownloadError` if parsing fails.
     fn parse_url(link: &str, expected_url_format: Option<&str>) -> Result<Url, DownloadError> {
         let expected_format =
             expected_url_format.unwrap_or("https://www.<domain>.<extension>/<parameters>");
@@ -20,7 +31,11 @@ pub trait Downloader {
         Ok(url)
     }
 
-    /// A function to download the file inside of the folder in which the program is called.
+    /// Downloads the file to the current working directory.
+    ///
+    /// ### Returns
+    ///
+    /// Returns a future representing the download operation, which resolves to a `Result` indicating success or failure.
     fn download(&self) -> impl std::future::Future<Output = Result<(), DownloadError>> + Send
     where
         Self: Sync,
@@ -28,7 +43,15 @@ pub trait Downloader {
         self.download_to(&std::path::Path::new("./"))
     }
 
-    /// A function to download the file to a given folder, where path is a folder.
+    /// Downloads the file to the specified folder path.
+    ///
+    /// ### Arguments
+    ///
+    /// * `path` - The path to the folder where the file will be downloaded.
+    ///
+    /// ### Returns
+    ///
+    /// Returns a future representing the download operation, which resolves to a `Result` indicating success or failure.
     fn download_to(
         &self,
         path: &std::path::Path,
@@ -36,6 +59,11 @@ pub trait Downloader {
     where
         Self: Sync;
 
+    /// Blocks the current thread until the download completes, using asynchronous execution.
+    ///
+    /// ### Returns
+    ///
+    /// Returns a `Result` indicating success or failure of the download operation.
     fn blocking_download(&self) -> Result<(), DownloadError>
     where
         Self: Sync,
@@ -54,6 +82,15 @@ pub trait Downloader {
         rt.block_on(async { self.download().await })
     }
 
+    /// Blocks the current thread until the download completes, using asynchronous execution, and saves the file to the specified folder path.
+    ///
+    /// ### Arguments
+    ///
+    /// * `path` - The path to the folder where the file will be downloaded.
+    ///
+    /// ### Returns
+    ///
+    /// Returns a `Result` indicating success or failure of the download operation.
     fn blocking_download_to(&self, path: &std::path::Path) -> Result<(), DownloadError>
     where
         Self: Sync,
