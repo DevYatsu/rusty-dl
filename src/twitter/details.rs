@@ -136,7 +136,7 @@ pub struct UnmentionData {
 
 #[derive(Debug, serde::Deserialize)]
 pub struct Views {
-    pub count: String,
+    pub count: Option<String>,
     pub state: String,
 }
 
@@ -234,6 +234,9 @@ pub enum MediaType {
 
     #[serde(rename = "video")]
     Video,
+
+    #[serde(rename = "animated_gif")]
+    Gif,
 }
 
 #[derive(Debug, serde::Deserialize)]
@@ -292,7 +295,7 @@ pub struct ExtMediaAvailability {
 #[derive(Debug, serde::Deserialize)]
 pub struct VideoInfo {
     pub aspect_ratio: Vec<f32>,
-    pub duration_millis: u32,
+    pub duration_millis: Option<u32>,
     pub variants: Vec<VideoVariant>,
 }
 

@@ -335,6 +335,13 @@ enum TwitterMedia<'a> {
     Video {
         thumbnail_url: &'a str,
         infos: &'a VideoInfo,
+        // VideoInfo.durationmillis is Some
+    },
+
+    Gif {
+        thumbnail_url: &'a str,
+        infos: &'a VideoInfo,
+        // VideoInfo.durationmillis is None
     },
 }
 
@@ -384,6 +391,12 @@ impl<'a> TryFrom<&'a MediaEntity> for TwitterMedia<'a> {
                         "Media with type video but with no video info found".to_owned(),
                     ))?,
             }),
+            MediaType::Gif => {
+                println!("{:?}", media_entity);
+                Ok(TwitterMedia::Image {
+                    url: &media_entity.media_url_https,
+                })
+            }
         }
     }
 }
