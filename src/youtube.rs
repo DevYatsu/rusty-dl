@@ -75,6 +75,13 @@ impl YoutubeDownloader {
 
 impl Downloader for YoutubeDownloader {
     async fn download_to(&self, path: &Path) -> Result<(), DownloadError> {
+        if path.is_file() {
+            return Err(DownloadError::Downloader(format!(
+                "Path must point to a directory. That is not the case for `{}`",
+                path.display()
+            )));
+        }
+
         let filter = if self.to_mp3 {
             VideoSearchOptions::Audio
         } else {

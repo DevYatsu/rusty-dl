@@ -12,6 +12,8 @@ pub enum DownloadError {
 
     TwitterError(String),
     YoutubeError(String),
+
+    Downloader(String),
 }
 
 impl fmt::Display for DownloadError {
@@ -26,6 +28,7 @@ impl fmt::Display for DownloadError {
             DownloadError::FailedToBuildBlockingRuntime(err) => write!(f, "{}", err),
             DownloadError::TwitterError(err) => write!(f, "{}", err),
             DownloadError::YoutubeError(err) => write!(f, "{}", err),
+            DownloadError::Downloader(err) => write!(f, "{}", err),
         }
     }
 }
@@ -42,6 +45,7 @@ impl error::Error for DownloadError {
             DownloadError::FailedToBuildBlockingRuntime(_) => None,
             DownloadError::TwitterError(_) => None,
             DownloadError::YoutubeError(_) => None,
+            DownloadError::Downloader(_) => None,
         }
     }
 }

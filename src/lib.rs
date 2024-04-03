@@ -1,4 +1,6 @@
 pub mod errors;
+pub mod header;
+pub mod resource;
 pub mod twitter;
 pub mod youtube;
 
