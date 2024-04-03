@@ -257,6 +257,12 @@ impl TwitterDownloader {
         let client = Client::new();
         let mut headers = HeaderMap::new();
         headers.insert(
+            "user-agent",
+            HeaderValue::from_static(
+                "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:84.0) Gecko/20100101 Firefox/84.0",
+            ),
+        );
+        headers.insert(
             "authorization",
             HeaderValue::from_str(&format!("Bearer {}", bearer_token))
                 .expect("Failed to create HeaderValue"),
