@@ -8,7 +8,7 @@ async fn main() -> Result<(), DownloadError> {
         .nth(1)
         .expect("expected a link passed as argument");
 
-    let downloader = YoutubeDownloader::new(&link)?;
+    let downloader = TwitterDownloader::new(&link)?;
 
     let start = Instant::now();
 

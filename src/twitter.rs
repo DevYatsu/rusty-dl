@@ -1,6 +1,9 @@
 use crate::{
     prelude::{DownloadError, Downloader},
-    twitter::utils::{retrieve_request_details, ErrorResponse},
+    twitter::{
+        details::MediaType,
+        utils::{retrieve_request_details, ErrorResponse},
+    },
 };
 use percent_encoding::{utf8_percent_encode, NON_ALPHANUMERIC};
 use regex::Regex;
@@ -35,6 +38,7 @@ now we need to extract the media download links, and finally download them!
 
 IN THE FUTURE:
 we should do the same as in the python version, that is whenever new variables and features are add, the program detects it and add them in the RequestDetails.json
+or maybe not because we do not want the crate to depend on any exterior file, that implies we should get rid of the json 
 */
 
 #[derive(Debug, PartialEq, PartialOrd, Ord, Eq, Clone)]
@@ -45,7 +49,10 @@ pub struct TwitterDownloader {
     status_id: String,
 }
 
-use self::{details::TweetDetails, utils::RequestDetails};
+use self::{
+    details::{MediaEntity, TweetDetails, VideoInfo},
+    utils::RequestDetails,
+};
 use serde::Deserialize;
 
 #[derive(Debug, Deserialize)]
@@ -319,6 +326,18 @@ impl TwitterDownloader {
     }
 }
 
+#[derive(Debug)]
+enum TwitterMedia<'a> {
+    Image {
+        url: &'a str,
+    },
+
+    Video {
+        thumbnail_url: &'a str,
+        infos: &'a VideoInfo,
+    },
+}
+
 impl Downloader for TwitterDownloader {
     async fn download_to(&self, path: &std::path::Path) -> Result<(), DownloadError> {
         let (bearer_token, guest_token) = self.get_tokens().await?;
@@ -326,8 +345,44 @@ impl Downloader for TwitterDownloader {
         let tweet_details = self.get_tweet_details(&bearer_token, &guest_token).await?;
 
         // medias contain all the informations regarding the tweet videos and images
-        let medias = tweet_details.data.tweet_result.result.legacy.entities.media;
+        let opt_medias = tweet_details.data.tweet_result.result.legacy.entities.media;
+
+        if let Some(medias) = opt_medias {
+            let media_infos = medias
+                .iter()
+                .map(|media_entity| media_entity.try_into())
+                .collect::<Result<Vec<TwitterMedia>, DownloadError>>()?;
+
+            // for videos take the one with highest bitrate -> thus with highest quality
+            // and download from url
+        } else {
+            return Err(DownloadError::TwitterError(format!(
+                "The tweet with ID `{}` does not contain any associated media.",
+                self.tweet_id()
+            )));
+        }
 
         Ok(())
+    }
+}
+
+impl<'a> TryFrom<&'a MediaEntity> for TwitterMedia<'a> {
+    type Error = DownloadError;
+
+    fn try_from(media_entity: &'a MediaEntity) -> Result<Self, Self::Error> {
+        match media_entity._type {
+            MediaType::Image => Ok(TwitterMedia::Image {
+                url: &media_entity.media_url_https,
+            }),
+            MediaType::Video => Ok(TwitterMedia::Video {
+                thumbnail_url: &media_entity.media_url_https,
+                infos: media_entity
+                    .video_info
+                    .as_ref()
+                    .ok_or(DownloadError::TwitterError(
+                        "Media with type video but with no video info found".to_owned(),
+                    ))?,
+            }),
+        }
     }
 }
