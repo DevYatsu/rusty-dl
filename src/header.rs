@@ -20,127 +20,92 @@ impl HeaderMapBuilder {
     }
 
     /// Adds a header field with the specified key and value.
-    pub fn field<K: IntoHeaderName, V: Into<HeaderBuilderValue>>(
-        &mut self,
-        key: K,
-        val: V,
-    ) -> &mut Self {
+    pub fn field<K: IntoHeaderName, V: Into<HeaderBuilderValue>>(mut self, key: K, val: V) -> Self {
         self.map.insert(key, val.into().into());
         self
     }
 
     /// Adds a 'User-Agent' header with a default value.
-    pub fn with_user_agent(&mut self) -> &mut Self {
+    pub fn with_user_agent(self) -> Self {
         self.field(
             header::USER_AGENT,
             "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:84.0) Gecko/20100101 Firefox/84.0",
-        );
-        self
+        )
     }
 
     /// Sets the 'User-Agent' header with the specified value.
-    pub fn set_user_agent<V: Into<HeaderBuilderValue>>(
-        &mut self,
-        user_agent_value: V,
-    ) -> &mut Self {
-        self.field(header::USER_AGENT, user_agent_value);
-        self
+    pub fn set_user_agent<V: Into<HeaderBuilderValue>>(self, user_agent_value: V) -> Self {
+        self.field(header::USER_AGENT, user_agent_value)
     }
 
     /// Adds an 'Accept' header with the specified value.
-    pub fn accept<V: Into<HeaderBuilderValue>>(&mut self, user_agent_value: V) -> &mut Self {
-        self.field(header::ACCEPT, user_agent_value);
-        self
+    pub fn accept<V: Into<HeaderBuilderValue>>(self, user_agent_value: V) -> Self {
+        self.field(header::ACCEPT, user_agent_value)
     }
 
     /// Adds an 'Accept-Language' header with the specified value.
-    pub fn accept_language<V: Into<HeaderBuilderValue>>(
-        &mut self,
-        user_agent_value: V,
-    ) -> &mut Self {
-        self.field(header::ACCEPT_LANGUAGE, user_agent_value);
-        self
+    pub fn accept_language<V: Into<HeaderBuilderValue>>(self, user_agent_value: V) -> Self {
+        self.field(header::ACCEPT_LANGUAGE, user_agent_value)
     }
 
     /// Adds a 'TE' header with the specified value.
-    pub fn te<V: Into<HeaderBuilderValue>>(&mut self, user_agent_value: V) -> &mut Self {
-        self.field(header::TE, user_agent_value);
-        self
+    pub fn te<V: Into<HeaderBuilderValue>>(self, user_agent_value: V) -> Self {
+        self.field(header::TE, user_agent_value)
     }
 
     /// Adds an 'Authorization' header with the specified value.
-    pub fn authorization<V: Into<HeaderBuilderValue>>(&mut self, user_agent_value: V) -> &mut Self {
-        self.field(header::AUTHORIZATION, user_agent_value);
-        self
+    pub fn authorization<V: Into<HeaderBuilderValue>>(self, user_agent_value: V) -> Self {
+        self.field(header::AUTHORIZATION, user_agent_value)
     }
 
     /// Adds a 'Content-Type' header with the specified value.
-    pub fn content_type<V: Into<HeaderBuilderValue>>(&mut self, user_agent_value: V) -> &mut Self {
-        self.field(header::CONTENT_TYPE, user_agent_value);
-        self
+    pub fn content_type<V: Into<HeaderBuilderValue>>(self, user_agent_value: V) -> Self {
+        self.field(header::CONTENT_TYPE, user_agent_value)
     }
 
     /// Adds a 'Content-Length' header with the specified value.
-    pub fn content_length<V: Into<HeaderBuilderValue>>(
-        &mut self,
-        user_agent_value: V,
-    ) -> &mut Self {
-        self.field(header::CONTENT_LENGTH, user_agent_value);
-        self
+    pub fn content_length<V: Into<HeaderBuilderValue>>(self, user_agent_value: V) -> Self {
+        self.field(header::CONTENT_LENGTH, user_agent_value)
     }
 
     /// Adds a 'Referer' header with the specified value.
-    pub fn referer<V: Into<HeaderBuilderValue>>(&mut self, user_agent_value: V) -> &mut Self {
-        self.field(header::REFERER, user_agent_value);
-        self
+    pub fn referer<V: Into<HeaderBuilderValue>>(self, user_agent_value: V) -> Self {
+        self.field(header::REFERER, user_agent_value)
     }
 
     /// Adds an 'Origin' header with the specified value.
-    pub fn origin<V: Into<HeaderBuilderValue>>(&mut self, user_agent_value: V) -> &mut Self {
-        self.field(header::ORIGIN, user_agent_value);
-        self
+    pub fn origin<V: Into<HeaderBuilderValue>>(self, user_agent_value: V) -> Self {
+        self.field(header::ORIGIN, user_agent_value)
     }
 
     /// Adds a 'Host' header with the specified value.
-    pub fn host<V: Into<HeaderBuilderValue>>(&mut self, user_agent_value: V) -> &mut Self {
-        self.field(header::HOST, user_agent_value);
-        self
+    pub fn host<V: Into<HeaderBuilderValue>>(self, user_agent_value: V) -> Self {
+        self.field(header::HOST, user_agent_value)
     }
 
     /// Adds an 'Accept-Encoding' header with the specified value.
-    pub fn accept_encoding<V: Into<HeaderBuilderValue>>(
-        &mut self,
-        user_agent_value: V,
-    ) -> &mut Self {
-        self.field(header::ACCEPT_ENCODING, user_agent_value);
-        self
+    pub fn accept_encoding<V: Into<HeaderBuilderValue>>(self, user_agent_value: V) -> Self {
+        self.field(header::ACCEPT_ENCODING, user_agent_value)
     }
 
     /// Adds a 'Connection' header with the specified value.
-    pub fn connection<V: Into<HeaderBuilderValue>>(&mut self, user_agent_value: V) -> &mut Self {
-        self.field(header::CONNECTION, user_agent_value);
-        self
+    pub fn connection<V: Into<HeaderBuilderValue>>(self, user_agent_value: V) -> Self {
+        self.field(header::CONNECTION, user_agent_value)
     }
 
     /// Adds a 'Cache-Control' header with the specified value.
-    pub fn cache_control<V: Into<HeaderBuilderValue>>(&mut self, value: V) -> &mut Self {
-        self.map.insert(header::CACHE_CONTROL, value.into().into());
-        self
+    pub fn cache_control<V: Into<HeaderBuilderValue>>(self, value: V) -> Self {
+        self.field(header::CACHE_CONTROL, value)
     }
 
     /// Adds a 'Pragma' header with the specified value.
-    pub fn pragma<V: Into<HeaderBuilderValue>>(&mut self, user_agent_value: V) -> &mut Self {
-        self.field(header::PRAGMA, user_agent_value);
-        self
+    pub fn pragma<V: Into<HeaderBuilderValue>>(self, user_agent_value: V) -> Self {
+        self.field(header::PRAGMA, user_agent_value)
     }
 
     /// Adds a 'Content-Disposition' header with the specified value.
-    pub fn content_disposition<V: Into<HeaderBuilderValue>>(
-        &mut self,
-        user_agent_value: V,
-    ) -> &mut Self {
-        self.field(header::CONTENT_DISPOSITION, user_agent_value);
-        self
+    pub fn content_disposition<V: Into<HeaderBuilderValue>>(self, user_agent_value: V) -> Self {
+        self.field(header::CONTENT_DISPOSITION, user_agent_value)
     }
 }
 

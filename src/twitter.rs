@@ -40,7 +40,7 @@ or maybe not because we do not want the crate to depend on any exterior file, th
 */
 
 #[derive(Debug, PartialEq, PartialOrd, Ord, Eq, Clone)]
-/// The `TwitterDownloader` is simply an implementation of [twitter_video-dl](https://github.com/inteoryx/twitter-video-dl.git) repository ported to rust!
+/// The `TwitterDownloader` is a Rust implementation inspired by the functionality of the [twitter_video-dl](https://github.com/inteoryx/twitter-video-dl.git) repository.
 pub struct TwitterDownloader {
     url: Url,
     tweet_id: String,
@@ -91,10 +91,10 @@ impl TwitterDownloader {
     }
 
     fn is_valid_twitter_url(url: &Url) -> bool {
-        url.domain() != Some("twitter.com")
-            && url.domain() != Some("x.com")
-            && url.domain() != Some("www.twitter.com")
-            && url.domain() != Some("www.x.com")
+        url.domain() == Some("twitter.com")
+            || url.domain() == Some("x.com")
+            || url.domain() == Some("www.twitter.com")
+            || url.domain() == Some("www.x.com")
     }
 
     fn extract_ids_from_url(url: &Url) -> Result<(String, String), DownloadError> {
@@ -107,9 +107,10 @@ impl TwitterDownloader {
             }
         }
 
-        Err(DownloadError::TwitterError(
-            "Failed to parse status_id and tweet_id from the tweet URL.".to_owned(),
-        ))
+        Err(DownloadError::TwitterError(format!(
+            "Failed to parse status_id and tweet_id from the tweet URL: `{}`",
+            url
+        )))
     }
 
     /// Returns the status ID of the Twitter tweet.
@@ -120,17 +121,28 @@ impl TwitterDownloader {
     pub fn tweet_id(&self) -> &str {
         &self.tweet_id
     }
+    pub fn url_str(&self) -> &str {
+        self.url.as_str()
+    }
+
+    async fn fetch_page_content(url: &str) -> Result<String, DownloadError> {
+        let response = reqwest::get(url).await?;
+
+        if !response.status().is_success() {
+            return Err(DownloadError::TwitterError(format!(
+                "Failed to fetch content from URL: {}",
+                url
+            )));
+        }
+
+        response.text().await.map_err(|_| {
+            DownloadError::TwitterError(format!("Failed to read text from URL: {}", url))
+        })
+    }
 
     /// Asynchronously retrieves the URL of the main JavaScript file from the Twitter tweet page.
     async fn get_mainjs_url(&self) -> Result<String, DownloadError> {
-        let response = reqwest::get(self.url.as_str()).await?;
-
-        if response.status() != 200 {
-            return Err(DownloadError::TwitterError(
-                "Failed to get tweet page! Check if the url is valid!".to_owned(),
-            ));
-        }
-        let content = response.text().await?;
+        let content = Self::fetch_page_content(self.url_str()).await?;
 
         let main_js_regex =
             Regex::new(r"https://abs.twimg.com/responsive-web/client-web-legacy/main\.[^.]+\.js")
@@ -141,23 +153,18 @@ impl TwitterDownloader {
             .collect();
 
         if mainjs_urls.is_empty() {
-            return Err(DownloadError::TwitterError(
-                "Failed to retrieve `main.js` file from the page.".to_owned(),
-            ));
+            return Err(DownloadError::TwitterError(format!(
+                "Failed to retrieve `main.js` file from `{}` page.",
+                self.url
+            )));
         }
 
         Ok(mainjs_urls[0].to_owned())
     }
+
     /// Asynchronously retrieves the bearer token from the main JavaScript file URL.
     async fn get_bearer_token(&self, mainjs_url: &str) -> Result<String, DownloadError> {
-        let main_js_response = reqwest::get(mainjs_url).await?;
-
-        if main_js_response.status() != 200 {
-            return Err(DownloadError::TwitterError(
-                "Failed to retrieve `main.js` file from the page.".to_owned(),
-            ));
-        }
-        let main_js_content = main_js_response.text().await?;
+        let main_js_content = Self::fetch_page_content(mainjs_url).await?;
 
         let bearer_regex = Regex::new(r#"AAAAAAAAA[^\"']+"#).unwrap();
         let bearer_tokens: Vec<&str> = bearer_regex
@@ -166,22 +173,22 @@ impl TwitterDownloader {
             .collect();
 
         if bearer_tokens.is_empty() {
-            return Err(DownloadError::TwitterError(
-                "Failed to find bearer token.".to_owned(),
-            ));
+            return Err(DownloadError::TwitterError(format!(
+                "Failed to find bearer token from `{}` page",
+                self.url
+            )));
         }
 
         let bearer_token = bearer_tokens[0];
 
         Ok(bearer_token.to_owned())
     }
+
     /// Asynchronously retrieves the guest token using the provided bearer token.
     async fn get_guest_token(&self, bearer_token: &str) -> Result<String, DownloadError> {
         let client = Client::new();
 
-        let mut header_builder = HeaderMapBuilder::new();
-
-        header_builder
+        let headers = HeaderMapBuilder::new()
             .with_user_agent()
             .accept("*/*")
             .accept_language("fr,en-US;q=0.7,en;q=0.3")
@@ -189,28 +196,35 @@ impl TwitterDownloader {
             .authorization(
                 HeaderValue::from_bytes(format!("Bearer {}", bearer_token).as_bytes())
                     .expect("Failed to create HeaderValue"),
-            );
+            )
+            .build();
 
-        let headers = header_builder.build();
-
-        let response = client
+        let body = client
             .post("https://api.twitter.com/1.1/guest/activate.json")
             .headers(headers)
             .send()
+            .await
+            .map(|res| {
+                if !res.status().is_success() {
+                    return Err(DownloadError::TwitterError(format!(
+                        "Failed to find guest token from `{}` page",
+                        self.url
+                    )));
+                }
+
+                Ok(res)
+            })??
+            .text()
             .await?;
 
-        if response.status() != 200 {
-            return Err(DownloadError::TwitterError(
-                "Failed to find guest token.".to_owned(),
-            ));
-        }
-
-        let body = response.text().await?;
-
-        let token_response: GuestTokenResponse = serde_json::from_str(&body)
-            .map_err(|_| DownloadError::TwitterError("Failed to find guest token.".to_owned()))?;
-
-        Ok(token_response.guest_token)
+        serde_json::from_str::<GuestTokenResponse>(&body)
+            .map(|token_response| token_response.guest_token)
+            .map_err(|_| {
+                DownloadError::TwitterError(format!(
+                    "Failed to find guest token from `{}` page",
+                    self.url
+                ))
+            })
     }
 
     /// Asynchronously retrieves the bearer and guest tokens required for retrieving the tweet data next.
@@ -252,10 +266,9 @@ impl TwitterDownloader {
         guest_token: &str,
     ) -> Result<Response, DownloadError> {
         let url = self.get_details_url().await?;
+        let client = Client::new();
 
-        let mut header_builder = HeaderMapBuilder::new();
-
-        header_builder
+        let headers = HeaderMapBuilder::new()
             .with_user_agent()
             .accept("*/*")
             .accept_language("fr,en-US;q=0.7,en;q=0.3")
@@ -267,12 +280,10 @@ impl TwitterDownloader {
             .field(
                 "x-guest-token",
                 HeaderValue::from_str(guest_token).expect("Failed to create HeaderValue"),
-            );
+            )
+            .build();
 
-        let client = Client::new();
-        let headers = header_builder.build();
         let details = client.get(url).headers(headers).send().await?;
-
         Ok(details)
     }
 
@@ -288,10 +299,11 @@ impl TwitterDownloader {
         // let max_tries = 11;
         // should we update the loop to automatically add new variables if needed when the variables changes server side ??
 
-        if details.status() != 200 {
-            return Err(DownloadError::TwitterError(
-                "Failed to get tweet details.".to_owned(),
-            ));
+        if !details.status().is_success() {
+            return Err(DownloadError::TwitterError(format!(
+                "Failed to get details of tweet with id `{}`",
+                self.tweet_id()
+            )));
         }
 
         let response_text = details.text().await?;
@@ -302,36 +314,14 @@ impl TwitterDownloader {
 
         Ok(tweet_details)
     }
-}
 
-#[derive(Debug)]
-enum TwitterMedia<'a> {
-    Image { url: &'a str },
+    pub async fn download_as_tweets_folder_to(
+        &self,
+        path: &std::path::Path,
+    ) -> Result<(), DownloadError> {
+        let path_buf = path.join(self.tweet_id());
 
-    Video { infos: &'a VideoInfo },
-}
-
-impl<'a> TwitterMedia<'a> {
-    pub fn get_download_url_and_ext(&self) -> (&'a str, Option<&'a str>) {
-        match self {
-            TwitterMedia::Image { url } => {
-                let extension = url.rsplit_once('.').map(|(_, ext)| ext);
-                (*url, extension)
-            }
-            TwitterMedia::Video { infos, .. } => {
-                let VideoInfo { variants, .. } = infos;
-
-                // for videos take the one with highest bitrate -> thus with highest quality
-                let opt_variant = variants
-                    .iter()
-                    .max_by_key(|variant| variant.bitrate.unwrap_or(0));
-
-                let variant = opt_variant.unwrap();
-                let extension = variant.content_type.split('/').nth(1);
-
-                (&variant.url, extension)
-            }
-        }
+        self.download_to(&path_buf).await
     }
 }
 
@@ -354,7 +344,15 @@ impl Downloader for TwitterDownloader {
         if let Some(medias) = opt_medias {
             let media_infos = medias
                 .iter()
-                .map(|media_entity| media_entity.try_into())
+                .map(|media_entity| {
+                    media_entity.try_into().map_err(|e| {
+                        DownloadError::TwitterError(format!(
+                            "{} in `{}` tweet details.",
+                            e,
+                            self.tweet_id()
+                        ))
+                    })
+                })
                 .collect::<Result<Vec<TwitterMedia>, DownloadError>>()?;
 
             let download_links: Vec<(&str, Option<&str>)> = media_infos
@@ -389,14 +387,56 @@ impl Downloader for TwitterDownloader {
     }
 
     async fn download(&self) -> Result<(), DownloadError> {
-        let path_str = format!("./{}/", self.tweet_id());
+        self.download_to(Path::new("./")).await
+    }
+}
 
-        self.download_to(Path::new(&path_str)).await
+/// Represents a media file from Twitter, such as an image or video.
+#[derive(Debug)]
+enum TwitterMedia<'a> {
+    /// Represents an image media file with its URL.
+    Image { url: &'a str },
+
+    /// Represents a video media file with its video information.
+    Video { infos: &'a VideoInfo },
+}
+
+impl<'a> TwitterMedia<'a> {
+    /// Returns the download URL of the media file and its file extension, if available.
+    ///
+    /// For images, the URL and file extension are extracted from the image URL.
+    ///
+    /// For videos, the URL is taken from the variant with the highest bitrate, and the file extension
+    /// is extracted from the content type.
+    ///
+    /// # Returns
+    ///
+    /// A tuple containing the download URL and optional file extension.
+    pub fn get_download_url_and_ext(&self) -> (&'a str, Option<&'a str>) {
+        match self {
+            TwitterMedia::Image { url } => {
+                let extension = url.rsplit_once('.').map(|(_, ext)| ext);
+                (*url, extension)
+            }
+            TwitterMedia::Video { infos, .. } => {
+                let VideoInfo { variants, .. } = infos;
+
+                // For videos, take the one with the highest bitrate, i.e., highest quality.
+                let opt_variant = variants
+                    .iter()
+                    .max_by_key(|variant| variant.bitrate.unwrap_or(0));
+
+                let variant = opt_variant.unwrap();
+                let extension = variant.content_type.split('/').nth(1);
+
+                (&variant.url, extension)
+            }
+        }
     }
 }
 
 impl<'a> TryFrom<&'a MediaEntity> for TwitterMedia<'a> {
-    type Error = DownloadError;
+    type Error = String;
 
     fn try_from(media_entity: &'a MediaEntity) -> Result<Self, Self::Error> {
         match media_entity._type {
@@ -407,9 +447,7 @@ impl<'a> TryFrom<&'a MediaEntity> for TwitterMedia<'a> {
                 infos: media_entity
                     .video_info
                     .as_ref()
-                    .ok_or(DownloadError::TwitterError(
-                        "Media with type video but with no video info found".to_owned(),
-                    ))?,
+                    .ok_or("Media with type video but with no video info found".to_owned())?,
             }),
         }
     }
