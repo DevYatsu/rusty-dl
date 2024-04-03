@@ -1,5 +1,5 @@
 use downloading::prelude::*;
-use std::{path::Path, time::Instant};
+use std::path::Path;
 
 #[tokio::main]
 async fn main() -> Result<(), DownloadError> {
@@ -7,17 +7,15 @@ async fn main() -> Result<(), DownloadError> {
     //     .nth(1)
     //     .expect("expected a link passed as argument");
 
-    let start = Instant::now();
+    let start = tokio::time::Instant::now();
 
-    let content = tokio::fs::read_to_string("test.txt").await?;
+    let content = tokio::fs::read_to_string("test.youtube").await?;
 
     let lines = content.lines();
 
     let results = futures::future::join_all(lines.into_iter().map(|line| async move {
-        let downloader = TwitterDownloader::new(line.trim())?;
-        downloader
-            .download_as_tweets_folder_to(Path::new("./tweets/"))
-            .await
+        let downloader = YoutubeDownloader::new(line.trim())?;
+        downloader.download_to(Path::new("./videos/")).await
     }))
     .await;
 

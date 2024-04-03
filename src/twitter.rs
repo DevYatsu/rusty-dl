@@ -323,6 +323,16 @@ impl TwitterDownloader {
 
         self.download_to(&path_buf).await
     }
+
+    pub fn blocking_download_as_tweets_folder_to(
+        &self,
+        path: &std::path::Path,
+    ) -> Result<(), DownloadError>
+    where
+        Self: Sync,
+    {
+        Self::blocking(async { self.download_as_tweets_folder_to(path).await })
+    }
 }
 
 impl Downloader for TwitterDownloader {

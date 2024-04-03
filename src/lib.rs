@@ -5,7 +5,7 @@ pub mod twitter;
 pub mod youtube;
 
 use crate::errors::DownloadError;
-use tokio::runtime::Builder;
+use futures::Future;
 use url::Url;
 
 /// A trait representing a downloader.
@@ -70,8 +70,12 @@ pub trait Downloader {
     where
         Self: Sync,
     {
+        Self::blocking(async { self.download().await })
+    }
+
+    fn blocking<F: Future>(async_block: F) -> Result<(), DownloadError> {
         // Create a multi-threaded Tokio runtime with the default number of worker threads
-        let rt = Builder::new_multi_thread()
+        let rt = tokio::runtime::Builder::new_multi_thread()
             .enable_all()
             .build()
             .map_err(|_| {
@@ -81,7 +85,8 @@ pub trait Downloader {
             })?;
 
         // Block the current thread until the download completes
-        rt.block_on(async { self.download().await })
+        rt.block_on(async_block);
+        Ok(())
     }
 
     /// Blocks the current thread until the download completes, using asynchronous execution, and saves the file to the specified folder path.
@@ -97,18 +102,7 @@ pub trait Downloader {
     where
         Self: Sync,
     {
-        // Create a multi-threaded Tokio runtime with the default number of worker threads
-        let rt = Builder::new_multi_thread()
-            .enable_all()
-            .build()
-            .map_err(|_| {
-                DownloadError::FailedToBuildBlockingRuntime(
-                    "Failed to build blocking runtime".to_owned(),
-                )
-            })?;
-
-        // Block the current thread until the download completes
-        rt.block_on(async { self.download_to(path).await })
+        Self::blocking(async { self.download_to(path).await })
     }
 }
 
