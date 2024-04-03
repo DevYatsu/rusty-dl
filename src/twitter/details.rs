@@ -70,7 +70,7 @@ pub struct LegacyUser {
     pub normal_followers_count: u64,
     pub pinned_tweet_ids_str: Vec<String>,
     pub possibly_sensitive: bool,
-    pub profile_banner_url: String,
+    pub profile_banner_url: Option<String>,
     pub profile_image_url_https: String,
     pub profile_interstitial_type: String,
     pub screen_name: String,

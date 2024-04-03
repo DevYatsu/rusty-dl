@@ -38,7 +38,7 @@ now we need to extract the media download links, and finally download them!
 
 IN THE FUTURE:
 we should do the same as in the python version, that is whenever new variables and features are add, the program detects it and add them in the RequestDetails.json
-or maybe not because we do not want the crate to depend on any exterior file, that implies we should get rid of the json 
+or maybe not because we do not want the crate to depend on any exterior file, that implies we should get rid of the json
 */
 
 #[derive(Debug, PartialEq, PartialOrd, Ord, Eq, Clone)]
@@ -353,6 +353,7 @@ impl Downloader for TwitterDownloader {
                 .map(|media_entity| media_entity.try_into())
                 .collect::<Result<Vec<TwitterMedia>, DownloadError>>()?;
 
+            println!("{:?}", media_infos);
             // for videos take the one with highest bitrate -> thus with highest quality
             // and download from url
         } else {

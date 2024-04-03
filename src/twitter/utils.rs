@@ -1,30 +1,29 @@
 use crate::prelude::DownloadError;
 use serde::{Deserialize, Serialize};
-use tokio::{fs::File, io::AsyncReadExt};
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Default)]
 pub struct RequestDetails {
     pub features: Features,
     pub variables: Variables,
 }
 
 pub async fn retrieve_request_details() -> Result<RequestDetails, DownloadError> {
-    let request_details_file = "RequestDetails.json";
+    // let request_details_file = "RequestDetails.json";
 
-    // Read the JSON file into a string
-    let mut file = File::open(request_details_file)
-        .await
-        .expect("Failed to open file");
-    let mut contents = String::new();
-    file.read_to_string(&mut contents)
-        .await
-        .expect("Failed to read file");
+    // // Read the JSON file into a string
+    // let mut file = File::open(request_details_file)
+    //     .await
+    //     .expect("Failed to open file");
+    // let mut contents = String::new();
+    // file.read_to_string(&mut contents)
+    //     .await
+    //     .expect("Failed to read file");
 
-    // Parse the JSON string into a serde_json::Value
-    let request_details: RequestDetails =
-        serde_json::from_str(&contents).expect("Failed to parse JSON");
+    // // Parse the JSON string into a serde_json::Value
+    // let request_details: RequestDetails =
+    //     serde_json::from_str(&contents).expect("Failed to parse JSON");
 
-    Ok(request_details)
+    Ok(RequestDetails::default())
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -110,4 +109,48 @@ struct Extension {
 #[derive(Debug, serde::Deserialize)]
 struct Trace {
     trace_id: String,
+}
+
+impl Default for Variables {
+    fn default() -> Self {
+        Self {
+            with_rux_injections: false,
+            include_promoted_content: true,
+            with_community: true,
+            with_quick_promote_eligibility_tweet_fields: true,
+            with_birdwatch_notes: true,
+            with_downvote_perspective: false,
+            with_reactions_metadata: false,
+            with_reactions_perspective: false,
+            with_voice: true,
+            with_v2_timeline: true,
+            tweet_id: None,
+        }
+    }
+}
+
+impl Default for Features {
+    fn default() -> Self {
+        Self {
+            responsive_web_graphql_exclude_directive_enabled: true,
+            verified_phone_label_enabled: false,
+            responsive_web_graphql_timeline_navigation_enabled: true,
+            responsive_web_graphql_skip_user_profile_image_extensions_enabled: false,
+            tweetypie_unmention_optimization_enabled: true,
+            vibe_api_enabled: false,
+            responsive_web_edit_tweet_api_enabled: false,
+            graphql_is_translatable_rweb_tweet_is_translatable_enabled: false,
+            view_counts_everywhere_api_enabled: true,
+            longform_notetweets_consumption_enabled: true,
+            tweet_awards_web_tipping_enabled: false,
+            freedom_of_speech_not_reach_fetch_enabled: false,
+            standardized_nudges_misinfo: false,
+            tweet_with_visibility_results_prefer_gql_limited_actions_policy_enabled: false,
+            interactive_text_enabled: false,
+            responsive_web_twitter_blue_verified_badge_is_enabled: true,
+            responsive_web_text_conversations_enabled: false,
+            longform_notetweets_richtext_consumption_enabled: false,
+            responsive_web_enhance_cards_enabled: false,
+        }
+    }
 }
