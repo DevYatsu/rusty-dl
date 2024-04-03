@@ -53,21 +53,32 @@ pub struct Features {
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Variables {
     with_rux_injections: bool,
-    includePromotedContent: bool,
-    withCommunity: bool,
-    withQuickPromoteEligibilityTweetFields: bool,
-    withBirdwatchNotes: bool,
-    withDownvotePerspective: bool,
-    withReactionsMetadata: bool,
-    withReactionsPerspective: bool,
-    withVoice: bool,
-    withV2Timeline: bool,
-    tweetId: Option<String>,
+    #[serde(rename = "includePromotedContent")]
+    include_promoted_content: bool,
+
+    #[serde(rename = "withCommunity")]
+    with_community: bool,
+    #[serde(rename = "withQuickPromoteEligibilityTweetFields")]
+    with_quick_promote_eligibility_tweet_fields: bool,
+    #[serde(rename = "withBirdwatchNotes")]
+    with_birdwatch_notes: bool,
+    #[serde(rename = "withDownvotePerspective")]
+    with_downvote_perspective: bool,
+    #[serde(rename = "withReactionsMetadata")]
+    with_reactions_metadata: bool,
+    #[serde(rename = "withReactionsPerspective")]
+    with_reactions_perspective: bool,
+    #[serde(rename = "withVoice")]
+    with_voice: bool,
+    #[serde(rename = "withV2Timeline")]
+    with_v2_timeline: bool,
+    #[serde(rename = "tweetId")]
+    tweet_id: Option<String>,
 }
 
 impl Variables {
     pub fn set_tweet_id(&mut self, tweet_id: String) {
-        self.tweetId = Some(tweet_id)
+        self.tweet_id = Some(tweet_id)
     }
 }
 

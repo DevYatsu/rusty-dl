@@ -11,6 +11,32 @@ use reqwest::{
 
 mod details;
 mod utils;
+
+/*
+THIS MESSAGE IS COPY-PASTE FROM `https://github.com/inteoryx/twitter-video-dl.git` repository from which this `TwitterDownloader` is an implementation of.
+
+Here's how this works:
+1. To download a video you need a Bearer Token and a guest token.  The guest token definitely expires and the Bearer Token could, though in practice I don't think it does.
+2. Use the video id get both of those as if you were an unauthenticated browser.
+3. Call "TweetDetails" graphql endpoint with your tokens.
+4. TweetDetails response includes a 'medias' key which is a list of video urls and details.  Find the one with the highest bitrate (bigger is better, right?) and then just download that.
+5. Some videos are small.  They are contained in a single mp4 file.  Other videos are big.  They have an mp4 file that's a "container" and then a bunch of m4s files.  Once we know the name of the video file we are looking for we can look up what the m4s files are, download all of them, and then put them all together into one big file.  This currently all happens in memory.  I would guess that a very huge video might cause an out of memory error.  I don't know, I haven't tried it.
+5. If it's broken, fix it yourself because I'm very slow.  Or, hey, let me know, but I might not reply for months.
+
+
+Current state of work:
+
+Currently the "TweetDetails" endpoint is https://twitter.com/i/api/graphql/ncDeACNGIApPMaqGVuF_rw/TweetResultByRestId?variables={}&features={}
+
+Once we have both tokens, we generate the URL with all the variables and features, send a request to the endpoint
+with headers containing our tokens, retrieve the "TweetDetails,":
+
+now we need to extract the media download links, and finally download them!
+
+IN THE FUTURE:
+we should do the same as in the python version, that is whenever new variables and features are add, the program detects it and add them in the RequestDetails.json
+*/
+
 #[derive(Debug, PartialEq, PartialOrd, Ord, Eq, Clone)]
 /// The `TwitterDownloader` is simply an implementation of [twitter_video-dl](https://github.com/inteoryx/twitter-video-dl.git) repository ported to rust!
 pub struct TwitterDownloader {
@@ -249,8 +275,9 @@ impl TwitterDownloader {
         let mut try_count = 1;
         let max_tries = 11;
 
-        // need to update the loop to automatically add new variables if needed when the variables change server side
+        // need to update the loop to automatically add new variables if needed when the variables changes server side
         loop {
+            break;
             if details.status() != 400 || try_count >= max_tries {
                 break;
             }

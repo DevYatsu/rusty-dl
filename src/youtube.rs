@@ -25,7 +25,10 @@ impl YoutubeDownloader {
     ///
     /// Returns a `Result` containing the `YoutubeDownloader` instance on success, or a `DownloadError` if parsing the URL fails or if the URL is invalid.
     pub fn new(link: &str) -> Result<Self, DownloadError> {
-        let url = Self::parse_url(link, Some("https://www.youtube.com/v=<VIDEO_ID> or https://www.youtu.be/<VIDEO_ID>/"))?;
+        let url = Self::parse_url(
+            link,
+            Some("https://www.youtube.com/v=<VIDEO_ID> or https://www.youtu.be/<VIDEO_ID>/"),
+        )?;
 
         if url.domain() != Some("www.youtube.com")
             && url.domain() != Some("youtube.com")
