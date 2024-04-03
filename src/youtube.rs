@@ -7,6 +7,7 @@ use rusty_ytdl::{VideoOptions, VideoQuality, VideoSearchOptions};
 use crate::prelude::{DownloadError, Downloader};
 
 #[derive(Debug, PartialEq, Clone)]
+/// Implementation of a YouTube downloader.
 pub struct YoutubeDownloader {
     url: Url,
     filter: VideoSearchOptions,
@@ -14,6 +15,15 @@ pub struct YoutubeDownloader {
 }
 
 impl YoutubeDownloader {
+    /// Creates a new instance of the `YoutubeDownloader` with the provided YouTube video link.
+    ///
+    /// ### Arguments
+    ///
+    /// * `link` - The YouTube video link to download.
+    ///
+    /// ### Returns
+    ///
+    /// Returns a `Result` containing the `YoutubeDownloader` instance on success, or a `DownloadError` if parsing the URL fails or if the URL is invalid.
     pub fn new(link: &str) -> Result<Self, DownloadError> {
         let url = Self::parse_url(link, Some("https://www.youtube.com/v=<VIDEO_ID>"))?;
 
@@ -33,22 +43,26 @@ impl YoutubeDownloader {
             to_mp3: false,
         })
     }
+    /// Sets the filter to download only the audio of the video.
     pub fn only_audio(&mut self) -> &mut Self {
         self.filter = VideoSearchOptions::Audio;
 
         self
     }
+    /// Sets the filter to download both the video and audio of the video.
     pub fn video_and_audio(&mut self) -> &mut Self {
         self.filter = VideoSearchOptions::VideoAudio;
 
         self
     }
+    /// Sets the filter to download only the video.
     pub fn only_video(&mut self) -> &mut Self {
         self.filter = VideoSearchOptions::Video;
 
         self
     }
 
+    /// Enables conversion of downloaded video to MP3 format.
     pub fn to_mp3(&mut self) -> &mut Self {
         self.to_mp3 = true;
 

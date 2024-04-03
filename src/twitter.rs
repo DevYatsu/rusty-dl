@@ -28,6 +28,15 @@ struct GuestTokenResponse {
 }
 
 impl TwitterDownloader {
+    /// Creates a new instance of `TwitterDownloader` with the provided Twitter tweet link.
+    ///
+    /// # Arguments
+    ///
+    /// * `link` - The Twitter tweet link to download.
+    ///
+    /// # Returns
+    ///
+    /// Returns a `Result` containing the `TwitterDownloader` instance on success, or a `DownloadError` if parsing the URL fails or if the URL is invalid.
     pub fn new(link: &str) -> Result<Self, DownloadError> {
         let url = Self::parse_url(
             link,
@@ -65,13 +74,16 @@ impl TwitterDownloader {
         ))
     }
 
+    /// Returns the status ID of the Twitter tweet.
     pub fn status_id(&self) -> &str {
         &self.status_id
     }
+    /// Returns the tweet ID of the Twitter tweet.
     pub fn tweet_id(&self) -> &str {
         &self.tweet_id
     }
 
+    /// Asynchronously retrieves the URL of the main JavaScript file from the Twitter tweet page.
     async fn get_mainjs_url(&self) -> Result<String, DownloadError> {
         let response = reqwest::get(self.url.as_str()).await?;
 
@@ -98,6 +110,7 @@ impl TwitterDownloader {
 
         Ok(mainjs_urls[0].to_owned())
     }
+    /// Asynchronously retrieves the bearer token from the main JavaScript file URL.
     async fn get_bearer_token(&self, mainjs_url: &str) -> Result<String, DownloadError> {
         let main_js_response = reqwest::get(mainjs_url).await?;
 
@@ -124,6 +137,7 @@ impl TwitterDownloader {
 
         Ok(bearer_token.to_owned())
     }
+    /// Asynchronously retrieves the guest token using the provided bearer token.
     async fn get_guest_token(&self, bearer_token: &str) -> Result<String, DownloadError> {
         let client = Client::new();
 
@@ -167,6 +181,7 @@ impl TwitterDownloader {
         Ok(token_response.guest_token)
     }
 
+    /// Asynchronously retrieves the bearer and guest tokens required for retrieving the tweet data next.
     pub async fn get_tokens(&self) -> Result<(String, String), DownloadError> {
         let mainjs_url = self.get_mainjs_url().await?;
         let bearer_token = self.get_bearer_token(&mainjs_url).await?;
@@ -175,6 +190,7 @@ impl TwitterDownloader {
         Ok((bearer_token, guest_token))
     }
 
+    /// Asynchronously constructs the URL for retrieving tweet details.
     async fn get_details_url(&self) -> Result<String, DownloadError> {
         let RequestDetails {
             mut variables,
@@ -197,6 +213,7 @@ impl TwitterDownloader {
         Ok(url)
     }
 
+    /// Asynchronously sends a request to retrieve tweet details using bearer and guest tokens.
     async fn details_req(
         &self,
         bearer_token: &str,
@@ -221,6 +238,7 @@ impl TwitterDownloader {
         Ok(details)
     }
 
+    /// Asynchronously retrieves tweet details using bearer and guest tokens.
     async fn get_tweet_details(
         &self,
         bearer_token: &str,
