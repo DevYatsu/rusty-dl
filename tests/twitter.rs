@@ -1,11 +1,10 @@
 use rusty_dl::prelude::*;
-use std::path::Path;
-use tokio::time::Instant;
 
 #[tokio::test]
-#[cfg(feature = "full")]
+#[cfg(feature = "twitter")]
 async fn twitter() -> Result<(), DownloadError> {
-    let start = Instant::now();
+    use std::path::Path;
+    let start = tokio::time::Instant::now();
 
     let content = tokio::fs::read_to_string("test.twitter").await?;
 
@@ -24,6 +23,8 @@ async fn twitter() -> Result<(), DownloadError> {
     }
 
     println!("it took {} seconds!", start.elapsed().as_secs_f64());
+
+    rusty_dl::test::assert_folder_len("./tweets/", 10)?;
 
     Ok(())
 }

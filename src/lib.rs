@@ -124,3 +124,13 @@ pub mod prelude {
     #[cfg(feature = "youtube")]
     pub use crate::youtube::YoutubeDownloader;
 }
+
+pub mod test {
+    use std::{fs::read_dir, io::Error, path::Path};
+
+    pub fn assert_folder_len(name: &str, len: usize) -> Result<(), Error> {
+        assert_eq!(read_dir(Path::new(name))?.count(), len);
+
+        Ok(())
+    }
+}
