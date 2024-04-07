@@ -1,7 +1,6 @@
 use rusty_dl::prelude::*;
 
 #[tokio::test]
-#[cfg(feature = "youtube")]
 async fn youtube() -> Result<(), DownloadError> {
     use std::path::Path;
     let start = tokio::time::Instant::now();

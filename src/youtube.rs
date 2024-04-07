@@ -79,7 +79,7 @@ impl YoutubeDownloader {
     ///
     /// ### Examples
     ///
-    /// ```
+    /// ```no_run
     /// use rusty_dl::prelude::{YoutubeDownloader, DownloadError};
     ///
     /// #[tokio::main]
@@ -250,7 +250,7 @@ impl YoutubeDownloader {
 
     /// Downloads a video to the specified path.
     ///
-    /// This function is not meant to be used  directly by users. Instead it should be called through one of the other functions in this struct.
+    /// **This function is not meant to be used  directly by users. Instead it should be called through one of the other functions in this struct.**
     ///
     /// This function asynchronously downloads a video to the provided folder path. It first fetches basic information about the video,
     /// such as its title, using the `get_basic_info` method of the [`Video`] struct. It then constructs the full path for the downloaded
@@ -266,20 +266,6 @@ impl YoutubeDownloader {
     ///
     /// Returns a [`DownloadError`] if any error occurs during the download process, such as failure to create directories,
     /// fetching video information, or downloading the video file.
-    ///
-    /// ### Examples
-    ///
-    /// ```
-    /// use rusty_dl::prelude::{YoutubeDownloader, DownloadError};
-    ///
-    /// #[tokio::main]
-    /// async fn main() -> Result<(), DownloadError> {
-    ///     let downloader = YoutubeDownloader::new("https://www.youtube.com/watch?v=video_id").unwrap();
-    ///     let video = downloader.get_video()?;
-    ///     downloader.download_video_to_path(video, "/path/to/download").await?;
-    ///     Ok(())
-    /// }
-    /// ```
     async fn download_video_to_path<P: AsRef<Path>>(
         &self,
         video: Video,
@@ -345,6 +331,8 @@ impl YoutubeDownloader {
 
     /// Downloads all videos from a playlist to the specified path.
     ///
+    /// **This function is not meant to be used  directly by users. Instead it should be called through one of the other functions in this struct.**
+    ///
     /// This function asynchronously downloads all videos from a YouTube playlist to the provided folder path.
     ///
     /// ### Arguments
@@ -355,20 +343,7 @@ impl YoutubeDownloader {
     ///
     /// Returns a `DownloadError` if any error occurs during the download process, such as failure to create directories,
     /// fetching playlist information, or downloading the videos.
-    ///
-    /// ### Examples
-    ///
-    /// ```
-    /// use rusty_dl::prelude::{YoutubeDownloader, DownloadError};
-    ///
-    /// #[tokio::main]
-    /// async fn main() -> Result<(), DownloadError> {
-    ///     let downloader = YoutubeDownloader::new("https://www.youtube.com/playlist?list=playlist_id").unwrap();
-    ///     downloader.download_playlist_to("/path/to/download").await?;
-    ///     Ok(())
-    /// }
-    /// ```    
-    pub async fn download_playlist_to(&self, path: &Path) -> Result<(), DownloadError> {
+    async fn download_playlist_to(&self, path: &Path) -> Result<(), DownloadError> {
         let playlist = self.get_playlist().await?;
         let joined_path = &path.join(&playlist.name.replace("/", "_"));
 

@@ -146,7 +146,7 @@ impl TwitterDownloader {
     /// let mut downloader = TwitterDownloader::new("https://twitter.com/user/status/123456789").unwrap();
     ///
     /// downloader.set_name_callback(|index, media| {
-    ///     format!("tweet_{}_{}", index + 1, media.extension().unwrap_or_default())
+    ///     format!("tweet_{}_{}", index + 1, media.extension().unwrap_or_default().to_string_lossy())
     /// });
     /// ```
     pub fn set_name_callback<F>(&mut self, callback: F) -> &mut Self

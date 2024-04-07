@@ -1,7 +1,6 @@
 use rusty_dl::prelude::*;
 
 #[tokio::test]
-#[cfg(feature = "twitter")]
 async fn twitter() -> Result<(), DownloadError> {
     use std::path::Path;
     let start = tokio::time::Instant::now();
