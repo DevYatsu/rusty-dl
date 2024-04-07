@@ -102,7 +102,11 @@ impl YoutubeDownloader {
 }
 
 impl Downloader for YoutubeDownloader {
-    async fn download_to(&self, path: &Path) -> Result<(), DownloadError> {
+    async fn download_to<P: AsRef<Path> + std::marker::Send>(
+        &self,
+        folder_path: P,
+    ) -> Result<(), DownloadError> {
+        let path = folder_path.as_ref();
         if path.is_file() {
             return Err(DownloadError::Downloader(format!(
                 "Path must point to a directory. That is not the case for `{}`",

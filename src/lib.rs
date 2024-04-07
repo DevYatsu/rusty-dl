@@ -10,7 +10,7 @@ pub mod twitter;
 pub mod youtube;
 
 use crate::errors::DownloadError;
-use std::future::Future;
+use std::{future::Future, path::Path};
 use url::Url;
 
 /// A trait representing a downloader.
@@ -50,7 +50,7 @@ pub trait Downloader {
     where
         Self: Sync,
     {
-        self.download_to(&std::path::Path::new("./"))
+        self.download_to("./")
     }
 
     /// Downloads the file to the specified folder path.
@@ -62,9 +62,9 @@ pub trait Downloader {
     /// ### Returns
     ///
     /// Returns a future representing the download operation, which resolves to a `Result` indicating success or failure.
-    fn download_to(
+    fn download_to<P: AsRef<Path> + std::marker::Send>(
         &self,
-        path: &std::path::Path,
+        path: P,
     ) -> impl std::future::Future<Output = Result<(), DownloadError>> + Send
     where
         Self: Sync;
@@ -106,7 +106,10 @@ pub trait Downloader {
     /// ### Returns
     ///
     /// Returns a `Result` indicating success or failure of the download operation.
-    fn blocking_download_to(&self, path: &std::path::Path) -> Result<(), DownloadError>
+    fn blocking_download_to<P: AsRef<Path> + std::marker::Send>(
+        &self,
+        path: P,
+    ) -> Result<(), DownloadError>
     where
         Self: Sync,
     {

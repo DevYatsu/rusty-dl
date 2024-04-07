@@ -1,4 +1,4 @@
-use std::path::Path;
+use std::{ffi::OsStr, path::Path, sync::Arc};
 
 use crate::{
     header::HeaderMapBuilder,
@@ -39,13 +39,14 @@ we should do the same as in the python version, that is whenever new variables a
 or maybe not because we do not want the crate to depend on any exterior file, that implies we should get rid of the json
 */
 
-#[derive(Debug, PartialEq, PartialOrd, Ord, Eq, Clone)]
+#[derive(Clone)]
 /// The `TwitterDownloader` is a Rust implementation inspired by the functionality of the [twitter_video-dl](https://github.com/inteoryx/twitter-video-dl.git) repository.
 pub struct TwitterDownloader {
     url: Url,
     tweet_id: String,
     status_id: String,
     only_media_kind: Option<MediaKind>,
+    names_callback: Arc<dyn Fn(usize, TwitterMedia) -> String + Send + Sync>,
 }
 
 #[derive(Debug, PartialEq, PartialOrd, Ord, Eq, Clone)]
@@ -95,7 +96,35 @@ impl TwitterDownloader {
             status_id,
             tweet_id,
             only_media_kind: None,
+            names_callback: Arc::new(|index: usize, media: TwitterMedia| {
+                let extension = media.extension();
+
+                let filename = extension.map_or_else(
+                    || format!("{}", index + 1),
+                    |ext| format!("{}.{}", index + 1, ext.to_string_lossy()),
+                );
+
+                filename
+            }),
         })
+    }
+
+    /// Sets the callback function to generate names for downloaded media.
+    ///
+    /// ### Arguments
+    ///
+    /// * `callback` - A function that takes a `TwitterMedia` instance and returns a `String`.
+    ///
+    /// ### Returns
+    ///
+    /// Returns a mutable reference to the modified `TwitterDownloader`.
+    pub fn set_name_callback<F>(&mut self, callback: F) -> &mut Self
+    where
+        F: Fn(usize, TwitterMedia) -> String + Send + Sync + 'static,
+    {
+        self.names_callback = Arc::new(callback);
+
+        self
     }
 
     /// Retrieves the media entities associated with the Twitter tweet.
@@ -395,7 +424,11 @@ impl TwitterDownloader {
 }
 
 impl Downloader for TwitterDownloader {
-    async fn download_to(&self, path: &std::path::Path) -> Result<(), DownloadError> {
+    async fn download_to<P: AsRef<Path> + std::marker::Send>(
+        &self,
+        folder_path: P,
+    ) -> Result<(), DownloadError> {
+        let path = folder_path.as_ref();
         if path.is_file() {
             return Err(DownloadError::Downloader(format!(
                 "Path must point to a directory. That is not the case for `{}`",
@@ -418,21 +451,19 @@ impl Downloader for TwitterDownloader {
             })
             .collect::<Result<Vec<TwitterMedia>, DownloadError>>()?;
 
-        let download_links: Vec<(&str, Option<&str>)> = media_infos
-            .iter()
+        let download_links: Vec<TwitterMedia> = media_infos
+            .into_iter()
             .filter(|x| TwitterMedia::filter_media_kind(x, self.only_media_kind.as_ref()))
-            .map(TwitterMedia::get_download_url_and_ext)
             .collect();
 
-        for (index, (url, extension)) in download_links.iter().enumerate() {
+        for (index, media) in download_links.iter().enumerate() {
+            let url = media.url();
+
             let rsrc_downloader = ResourceDownloader::new(url).map_err(|_| {
                 DownloadError::TwitterError(format!("Invalid Media File path: `{}`", url))
             })?;
 
-            let filename = extension.map_or_else(
-                || format!("{}", index + 1),
-                |ext| format!("{}.{}", index + 1, ext),
-            );
+            let filename = (self.names_callback)(index, *media);
             let file_path = path.join(filename);
 
             rsrc_downloader.download_to(&file_path).await?;
@@ -442,7 +473,7 @@ impl Downloader for TwitterDownloader {
     }
 
     async fn download(&self) -> Result<(), DownloadError> {
-        self.download_to(Path::new("./")).await
+        self.download_to("./").await
     }
 
     fn is_valid_url(url: &Url) -> bool {
@@ -454,8 +485,8 @@ impl Downloader for TwitterDownloader {
 }
 
 /// Represents a media file from Twitter, such as an image or video.
-#[derive(Debug)]
-enum TwitterMedia<'a> {
+#[derive(Debug, Clone, Copy)]
+pub enum TwitterMedia<'a> {
     /// Represents an image media file with its URL.
     Image { url: &'a str },
 
@@ -464,22 +495,26 @@ enum TwitterMedia<'a> {
 }
 
 impl<'a> TwitterMedia<'a> {
-    /// Returns the download URL of the media file and its file extension, if available.
-    ///
-    /// For images, the URL and file extension are extracted from the image URL.
-    ///
-    /// For videos, the URL is taken from the variant with the highest bitrate, and the file extension
-    /// is extracted from the content type.
-    ///
-    /// # Returns
-    ///
-    /// A tuple containing the download URL and optional file extension.
-    pub fn get_download_url_and_ext(&self) -> (&'a str, Option<&'a str>) {
+    pub fn url(&self) -> &'a str {
         match self {
-            TwitterMedia::Image { url } => {
-                let extension = url.rsplit_once('.').map(|(_, ext)| ext);
-                (*url, extension)
+            TwitterMedia::Image { url } => *url,
+            TwitterMedia::Video { infos, .. } => {
+                let VideoInfo { variants, .. } = infos;
+
+                // For videos, take the one with the highest bitrate, i.e., highest quality.
+                let opt_variant = variants
+                    .iter()
+                    .max_by_key(|variant| variant.bitrate.unwrap_or(0));
+
+                let variant = opt_variant.unwrap();
+                &variant.url
             }
+        }
+    }
+
+    pub fn extension(&self) -> Option<&OsStr> {
+        match self {
+            TwitterMedia::Image { url } => Path::new(url).extension(),
             TwitterMedia::Video { infos, .. } => {
                 let VideoInfo { variants, .. } = infos;
 
@@ -491,12 +526,12 @@ impl<'a> TwitterMedia<'a> {
                 let variant = opt_variant.unwrap();
                 let extension = variant.content_type.split('/').nth(1);
 
-                (&variant.url, extension)
+                extension.map(|s| OsStr::new(s))
             }
         }
     }
 
-    pub fn filter_media_kind(&self, media_kind: Option<&MediaKind>) -> bool {
+    fn filter_media_kind(&self, media_kind: Option<&MediaKind>) -> bool {
         match media_kind {
             None => true,
             Some(_) if media_kind == Some(&MediaKind::Image) => match self {

@@ -64,7 +64,11 @@ impl Downloader for ResourceDownloader {
     /// ### Errors
     ///
     /// Returns a `DownloadError` if there are any issues during the download process.
-    async fn download_to(&self, path: &Path) -> Result<(), DownloadError> {
+    async fn download_to<P: AsRef<Path> + std::marker::Send>(
+        &self,
+        file_path: P,
+    ) -> Result<(), DownloadError> {
+        let path = file_path.as_ref();
         if path.is_dir() {
             return Err(DownloadError::Downloader(format!(
                 "Path must point to a file. That is not the case for `{}`",
