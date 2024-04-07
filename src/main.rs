@@ -8,6 +8,7 @@ async fn main() -> Result<(), DownloadError> {
     //     .expect("expected a link passed as argument");
 
     let start = tokio::time::Instant::now();
+    println!("Downloading...");
 
     let content = tokio::fs::read_to_string("test.youtube").await?;
 
@@ -23,6 +24,7 @@ async fn main() -> Result<(), DownloadError> {
         result?
     }
 
+    println!("Downloading finished!");
     println!("it took {} seconds!", start.elapsed().as_secs_f64());
 
     Ok(())

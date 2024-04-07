@@ -1,4 +1,4 @@
-use downloading::prelude::*;
+use rusty_dl::prelude::*;
 use std::path::Path;
 use tokio::time::Instant;
 

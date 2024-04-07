@@ -538,23 +538,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "downloading"
-version = "0.0.1"
-dependencies = [
- "futures",
- "percent-encoding",
- "rayon",
- "regex",
- "reqwest 0.12.2",
- "rusty_ytdl",
- "serde",
- "serde_json",
- "serde_urlencoded",
- "tokio",
- "url",
-]
-
-[[package]]
 name = "dtoa"
 version = "1.0.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2095,6 +2078,23 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1c74cae0a4cf6ccbbf5f359f08efdf8ee7e1dc532573bf0db71968cb56b1448c"
 dependencies = [
  "base64",
+]
+
+[[package]]
+name = "rusty_dl"
+version = "0.0.1"
+dependencies = [
+ "futures",
+ "percent-encoding",
+ "rayon",
+ "regex",
+ "reqwest 0.12.2",
+ "rusty_ytdl",
+ "serde",
+ "serde_json",
+ "serde_urlencoded",
+ "tokio",
+ "url",
 ]
 
 [[package]]
