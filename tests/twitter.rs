@@ -3,6 +3,7 @@ use std::path::Path;
 use tokio::time::Instant;
 
 #[tokio::test]
+#[cfg(feature = "full")]
 async fn twitter() -> Result<(), DownloadError> {
     let start = Instant::now();
 

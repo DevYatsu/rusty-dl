@@ -2,7 +2,7 @@ use rusty_dl::prelude::*;
 use std::path::Path;
 
 #[tokio::main]
-#[cfg(feature = "dev")]
+// #[cfg(feature = "dev")]
 async fn main() -> Result<(), DownloadError> {
     // let link = std::env::args()
     //     .nth(1)
@@ -30,7 +30,8 @@ async fn main() -> Result<(), DownloadError> {
 
     Ok(())
 }
-#[cfg(not(feature = "dev"))]
-fn main() {
 
-}
+// #[cfg(not(feature = "dev"))]
+// fn main() {
+
+// }
