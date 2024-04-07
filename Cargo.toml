@@ -1,5 +1,6 @@
 [package]
 name = "rusty_dl"
+authors = ["yatsu"]
 version = "0.0.1"
 edition = "2021"
 license = "MIT OR Apache-2.0"
@@ -9,23 +10,38 @@ readme = "README.md"
 repository = "https://github.com/DevYatsu/rusty-dl"
 categories = ["internet", "media", "utilities"]
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+# dev dependencies setup
+
+# [dependencies]
+# futures = {version = "0.3.30"}
+# percent-encoding = {version = "2.3.1"}
+# regex = {version = "1.10.4"}
+# reqwest = "0.12.2"
+# rusty_ytdl =  {features = ["blocking", "ffmpeg"], version = "0.7.1"}
+# serde = {version = "1.0.197", features = ["derive"]}
+# serde_json = {version = "1.0.115"}
+# serde_urlencoded = {version = "0.7.1"}
+# tokio = {features = ["full"], version =  "1.37.0"}
+# url = "2.5.0"
+
+# release dependencies setup
 
 [dependencies]
-futures = "0.3.30"
-percent-encoding = "2.3.1"
-rayon = "1.10.0"
-regex = "1.10.4"
-reqwest = {features = ["multipart"], version = "0.12.2"}
-rusty_ytdl =  {features = ["blocking", "ffmpeg"], version = "0.7.1"}
-serde = {version = "1.0.197", features = ["derive"]}
-serde_json = "1.0.115"
-serde_urlencoded = "0.7.1"
+futures = {version = "0.3.30", optional = true}
+percent-encoding = {version = "2.3.1", optional = true}
+regex = {version = "1.10.4", optional = true}
+reqwest = "0.12.2"
+rusty_ytdl =  {features = ["blocking", "ffmpeg"], version = "0.7.1", optional = true}
+serde = {version = "1.0.197", features = ["derive"], optional = true}
+serde_json = {version = "1.0.115", optional = true}
+serde_urlencoded = {version = "0.7.1", optional = true}
 tokio = {features = ["full"], version =  "1.37.0"}
 url = "2.5.0"
 
 [features]
-full = ["youtube", "twitter", "resource"] # all medias download
-youtube = ["youtube"] # youtube videos download
-twitter = ["twitter", "resource"] # twitter medias download
-resource = ["resource"] # downloading files from the internet
+full = ["youtube", "twitter", "resource"] 
+dev = ["full", "futures"]
+twitter = ["resource", "regex", "percent-encoding", ] 
+youtube = ["rusty_ytdl", "serde", "serde_json"]
+resource = []

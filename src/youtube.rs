@@ -1,10 +1,8 @@
-use std::path::{Path, PathBuf};
-
+use crate::prelude::{DownloadError, Downloader};
 use reqwest::Url;
 use rusty_ytdl::FFmpegArgs;
 use rusty_ytdl::{VideoOptions, VideoQuality, VideoSearchOptions};
-
-use crate::prelude::{DownloadError, Downloader};
+use std::path::{Path, PathBuf};
 
 #[derive(Debug, PartialEq, Clone)]
 /// Implementation of a YouTube downloader.

@@ -1,11 +1,16 @@
 pub mod errors;
 pub mod header;
+
+#[cfg(feature = "resource")]
 pub mod resource;
+#[cfg(feature = "twitter")]
 pub mod twitter;
+
+#[cfg(feature = "youtube")]
 pub mod youtube;
 
 use crate::errors::DownloadError;
-use futures::Future;
+use std::future::Future;
 use url::Url;
 
 /// A trait representing a downloader.

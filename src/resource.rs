@@ -1,14 +1,15 @@
 use std::path::Path;
 
+use crate::header::HeaderMapBuilder;
+use crate::prelude::{DownloadError, Downloader};
 use reqwest::{Client, Response};
 use tokio::{fs::File, io::AsyncWriteExt};
-
-use crate::{header::HeaderMapBuilder, prelude::DownloadError, Downloader};
+use url::Url;
 
 #[derive(Debug, Clone)]
 /// The `ResourceDownloader` is designed for downloading resources directly from the internet, such as files hosted on a website.
 pub struct ResourceDownloader {
-    url: url::Url,
+    url: Url,
 }
 
 impl ResourceDownloader {
