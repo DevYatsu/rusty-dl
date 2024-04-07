@@ -77,13 +77,24 @@ pub struct GuestTokenResponse {
 impl TwitterDownloader {
     /// Creates a new instance of [`TwitterDownloader`] with the provided Twitter tweet link.
     ///
-    /// # Arguments
+    /// ### Arguments
     ///
     /// * `link` - The Twitter tweet link to download.
     ///
-    /// # Returns
+    /// ### Returns
     ///
     /// Returns a [`Result`] containing the [`TwitterDownloader`] instance on success, or a [`DownloadError`] if parsing the URL fails or if the URL is invalid.
+    ///
+    /// ### Examples
+    ///
+    /// ```
+    /// use rusty_dl::prelude::TwitterDownloader;
+    ///
+    /// let link = "https://twitter.com/user/status/123456789";
+    /// let downloader = TwitterDownloader::new(link);
+    ///
+    /// assert!(downloader.is_ok());
+    /// ```    
     pub fn new(link: &str) -> Result<Self, DownloadError> {
         let url = Self::parse_url(
             link,
@@ -117,7 +128,7 @@ impl TwitterDownloader {
         })
     }
 
-    /// Sets the callback function to generate names for downloaded media.
+    /// Define a callback function to generate file names from.
     ///
     /// ### Arguments
     ///
@@ -125,7 +136,19 @@ impl TwitterDownloader {
     ///
     /// ### Returns
     ///
-    /// Returns a mutable reference to the modified [`TwitterDownloader`].
+    /// Returns a mutable reference to the modified [`TwitterDownloader`]
+    ///
+    /// ### Examples
+    ///
+    /// ```
+    /// use rusty_dl::prelude::TwitterDownloader;
+    ///
+    /// let mut downloader = TwitterDownloader::new("https://twitter.com/user/status/123456789").unwrap();
+    ///
+    /// downloader.set_name_callback(|index, media| {
+    ///     format!("tweet_{}_{}", index + 1, media.extension().unwrap_or_default())
+    /// });
+    /// ```
     pub fn set_name_callback<F>(&mut self, callback: F) -> &mut Self
     where
         F: Fn(usize, TwitterMedia) -> String + Send + Sync + 'static,
