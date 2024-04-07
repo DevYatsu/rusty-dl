@@ -47,6 +47,20 @@ pub trait Downloader {
     /// ### Returns
     ///
     /// Returns a future representing the download operation, which resolves to a [`Result`] indicating success or failure.
+/// # Examples
+///
+/// ```
+/// use rusty_dl::prelude::{DownloadError, Downloader, ResourceDownloader}; // ResourceDownloader is used but it could be TwitterDownloader or any other struct implementing Downloader trait
+///
+/// #[tokio::main]
+/// async fn main() -> Result<(), DownloadError> {
+///     let downloader = ResourceDownloader::new("https://www.youtube.com/manifest.webmanifest").unwrap();
+///     let result = downloader.download().await?;
+/// 
+///     Ok(())
+/// } 
+///
+/// ```
     fn download(&self) -> impl std::future::Future<Output = Result<(), DownloadError>> + Send
     where
         Self: Sync,

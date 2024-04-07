@@ -69,7 +69,7 @@ pub enum MediaKind {
 }
 
 #[derive(Debug, Deserialize)]
-pub struct GuestTokenResponse {
+struct GuestTokenResponse {
     /// The guest token for accessing Twitter content.
     guest_token: String,
 }

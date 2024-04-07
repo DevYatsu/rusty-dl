@@ -51,19 +51,6 @@ impl ResourceDownloader {
 }
 
 impl Downloader for ResourceDownloader {
-    /// Downloads the file to the specified file path.
-    ///
-    /// ### Arguments
-    ///
-    /// * `path` - The file path to download the file to.
-    ///
-    /// ### Returns
-    ///
-    /// A future representing the download operation, which resolves to a [`Result`] indicating success or failure.
-    ///
-    /// ### Errors
-    ///
-    /// Returns a [`DownloadError`] if there are any issues during the download process.
     async fn download_to<P: AsRef<Path> + std::marker::Send>(
         &self,
         file_path: P,
@@ -88,6 +75,14 @@ impl Downloader for ResourceDownloader {
 
         Ok(())
     }
+
+    async fn download(
+        &self,
+    ) -> Result<(), DownloadError> {
+        let name = self.url.path_segments().and_then(|segments| segments.last()).unwrap_or_else(|| self.url.as_str());
+        self.download_to(Path::new("./").join(name)).await
+    }
+
 
     fn is_valid_url(url: &Url) -> bool {
         url.has_host() && (url.scheme() == "https" || url.scheme() == "http")
