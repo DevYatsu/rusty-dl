@@ -63,10 +63,7 @@ impl Downloader for ResourceDownloader {
             )));
         }
 
-        if let Some(parent) = path.parent() {
-            tokio::fs::create_dir_all(parent).await?;
-        }
-
+        tokio::fs::create_dir_all(path).await?;
         let mut file = File::create(path).await?;
 
         let response = self.send_request().await?;
@@ -76,13 +73,14 @@ impl Downloader for ResourceDownloader {
         Ok(())
     }
 
-    async fn download(
-        &self,
-    ) -> Result<(), DownloadError> {
-        let name = self.url.path_segments().and_then(|segments| segments.last()).unwrap_or_else(|| self.url.as_str());
+    async fn download(&self) -> Result<(), DownloadError> {
+        let name = self
+            .url
+            .path_segments()
+            .and_then(|segments| segments.last())
+            .unwrap_or_else(|| self.url.as_str());
         self.download_to(Path::new("./").join(name)).await
     }
-
 
     fn is_valid_url(url: &Url) -> bool {
         url.has_host() && (url.scheme() == "https" || url.scheme() == "http")

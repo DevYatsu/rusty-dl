@@ -466,7 +466,6 @@ impl Downloader for TwitterDownloader {
                 path.display()
             )));
         }
-
         let medias = self.get_tweet_medias().await?;
 
         let media_infos = medias
@@ -486,6 +485,8 @@ impl Downloader for TwitterDownloader {
             .into_iter()
             .filter(|x| TwitterMedia::filter_media_kind(x, self.only_media_kind.as_ref()))
             .collect();
+
+        tokio::fs::create_dir_all(path).await?;
 
         for (index, media) in download_links.iter().enumerate() {
             let url = media.url();
