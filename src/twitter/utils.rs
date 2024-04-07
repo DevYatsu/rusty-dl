@@ -88,27 +88,27 @@ pub struct ErrorResponse {
 
 #[derive(Debug, serde::Deserialize)]
 struct Error {
-    message: String,
-    extensions: Extension,
-    code: u32,
-    kind: String,
-    name: String,
-    source: String,
-    tracing: Trace,
+    pub message: String,
+    pub extensions: Extension,
+    pub code: u32,
+    pub kind: String,
+    pub name: String,
+    pub source: String,
+    pub tracing: Trace,
 }
 
 #[derive(Debug, serde::Deserialize)]
 struct Extension {
-    name: String,
-    source: String,
-    code: u32,
-    kind: String,
-    tracing: Trace,
+    pub name: String,
+    pub source: String,
+    pub code: u32,
+    pub kind: String,
+    pub tracing: Trace,
 }
 
 #[derive(Debug, serde::Deserialize)]
 struct Trace {
-    trace_id: String,
+    pub trace_id: String,
 }
 
 impl Default for Variables {
