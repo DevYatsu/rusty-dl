@@ -45,6 +45,12 @@ pub struct TwitterDownloader {
     url: Url,
     tweet_id: String,
     status_id: String,
+    only_media_kind: Option<MediaKind>
+}
+
+#[derive(Debug, PartialEq, PartialOrd, Ord, Eq, Clone)]
+pub enum MediaKind {
+    Image, Video, Gif
 }
 
 use self::{
@@ -87,9 +93,11 @@ impl TwitterDownloader {
             url,
             status_id,
             tweet_id,
+            only_media_kind: None
         })
     }
 
+    /// Checks if the given URL is a valid Twitter URL.
     fn is_valid_twitter_url(url: &Url) -> bool {
         url.domain() == Some("twitter.com")
             || url.domain() == Some("x.com")
@@ -97,6 +105,7 @@ impl TwitterDownloader {
             || url.domain() == Some("www.x.com")
     }
 
+    /// Extracts the status ID and tweet ID from the Twitter tweet URL.
     fn extract_ids_from_url(url: &Url) -> Result<(String, String), DownloadError> {
         let pattern = r"https://(twitter|x)\.com/([^/]+)/status/(\d+)";
         let url_regex = Regex::new(pattern).unwrap();
@@ -113,6 +122,19 @@ impl TwitterDownloader {
         )))
     }
 
+    pub fn only_images(&mut self) -> &mut Self {
+        self.only_media_kind = Some(MediaKind::Image);
+        self
+    }
+    pub fn only_videos(&mut self) -> &mut Self {
+        self.only_media_kind = Some(MediaKind::Video);
+        self
+    }
+    pub fn only_gifs(&mut self) -> &mut Self {
+        self.only_media_kind = Some(MediaKind::Gif);
+        self
+    }
+
     /// Returns the status ID of the Twitter tweet.
     pub fn status_id(&self) -> &str {
         &self.status_id
@@ -121,10 +143,12 @@ impl TwitterDownloader {
     pub fn tweet_id(&self) -> &str {
         &self.tweet_id
     }
+    /// Returns the URL of the Twitter tweet.
     pub fn url_str(&self) -> &str {
         self.url.as_str()
     }
 
+    /// Fetches the content of the Twitter tweet page asynchronously.
     async fn fetch_page_content(url: &str) -> Result<String, DownloadError> {
         let response = reqwest::get(url).await?;
 
@@ -260,7 +284,7 @@ impl TwitterDownloader {
     }
 
     /// Asynchronously sends a request to retrieve tweet details using bearer and guest tokens.
-    async fn details_req(
+    async fn retrieve_details(
         &self,
         bearer_token: &str,
         guest_token: &str,
@@ -293,7 +317,7 @@ impl TwitterDownloader {
         bearer_token: &str,
         guest_token: &str,
     ) -> Result<TweetDetails, DownloadError> {
-        let details = self.details_req(bearer_token, guest_token).await?;
+        let details = self.retrieve_details(bearer_token, guest_token).await?;
 
         // let mut try_count = 1;
         // let max_tries = 11;
@@ -315,6 +339,15 @@ impl TwitterDownloader {
         Ok(tweet_details)
     }
 
+    /// Downloads the Twitter tweet media and saves it to the specified folder with the tweet ID as the file name.
+    ///
+    /// ### Arguments
+    ///
+    /// * `path` - The path to the folder where the media will be downloaded.
+    ///
+    /// ### Returns
+    ///
+    /// Returns a `Result` indicating success or failure of the download operation.
     pub async fn download_as_tweets_folder_to(
         &self,
         path: &std::path::Path,
@@ -324,6 +357,15 @@ impl TwitterDownloader {
         self.download_to(&path_buf).await
     }
 
+    /// Blocks the current thread until the Twitter tweet media is downloaded and saved to the specified folder with the tweet ID as the file name.
+    ///
+    /// ### Arguments
+    ///
+    /// * `path` - The path to the folder where the media will be downloaded.
+    ///
+    /// ### Returns
+    ///
+    /// Returns a `Result` indicating success or failure of the download operation.
     pub fn blocking_download_as_tweets_folder_to(
         &self,
         path: &std::path::Path,

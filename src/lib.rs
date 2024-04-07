@@ -115,13 +115,13 @@ pub mod prelude {
     pub use crate::errors::DownloadError;
     pub use crate::Downloader;
 
-    #[cfg(feature = "resource")]
+    // #[cfg(feature = "resource")]
     pub use crate::resource::ResourceDownloader;
 
-    #[cfg(feature = "twitter")]
+    // #[cfg(feature = "twitter")]
     pub use crate::twitter::TwitterDownloader;
 
-    #[cfg(feature = "youtube")]
+    // #[cfg(feature = "youtube")]
     pub use crate::youtube::YoutubeDownloader;
 }
 

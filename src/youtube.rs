@@ -10,6 +10,8 @@ pub struct YoutubeDownloader {
     url: Url,
     filter: VideoSearchOptions,
     to_mp3: bool,
+    add_underscores_in_name: bool,
+    video_name: Option<String>
 }
 
 impl YoutubeDownloader {
@@ -42,8 +44,25 @@ impl YoutubeDownloader {
             url,
             filter: VideoSearchOptions::VideoAudio,
             to_mp3: false,
+            add_underscores_in_name: false,
+            video_name: None
         })
     }
+
+    /// Enables renaming the downloaded video with underscores.
+    pub fn rename_with_underscores(&mut self) {
+        self.add_underscores_in_name = true;
+    }
+
+    /// Sets a custom name for the downloaded video.
+    ///
+    /// ### Arguments
+    ///
+    /// * `new_name` - The new name for the downloaded video.
+    pub fn set_name(&mut self, new_name: String) {
+        self.video_name = Some(new_name);
+    }
+
     /// Sets the filter to download only the audio of the video.
     pub fn only_audio(&mut self) -> &mut Self {
         self.filter = VideoSearchOptions::Audio;
@@ -97,7 +116,13 @@ impl Downloader for YoutubeDownloader {
 
         let base_path: PathBuf = path.into();
 
-        let new_path = base_path.join(video_info.video_details.title.replace(" ", "_"));
+        let mut video_name = self.video_name.to_owned().unwrap_or(video_info.video_details.title);
+
+        if self.add_underscores_in_name {
+            video_name = video_name.replace(" ", "_");
+        }
+
+        let new_path = base_path.join(video_name);
         let title = new_path.display();
 
         if let Some(parent) = new_path.parent() {
@@ -129,9 +154,5 @@ impl Downloader for YoutubeDownloader {
         }
 
         Ok(())
-    }
-
-    fn blocking_download(&self) -> Result<(), DownloadError> {
-        Self::blocking(async { self.download().await })
     }
 }
