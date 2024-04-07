@@ -2058,7 +2058,7 @@ checksum = "ecd36cc4259e3e4514335c4a138c6b43171a8d61d8f5c9348f9fc7529416f247"
 
 [[package]]
 name = "rusty_dl"
-version = "0.0.1"
+version = "0.1.0"
 dependencies = [
  "futures",
  "percent-encoding",
