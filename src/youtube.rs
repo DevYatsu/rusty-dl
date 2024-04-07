@@ -1,8 +1,16 @@
+use crate::header::HeaderMapBuilder;
 use crate::prelude::{DownloadError, Downloader};
-use reqwest::Url;
+use reqwest::{Client, Url};
 use rusty_ytdl::{FFmpegArgs, Video};
 use rusty_ytdl::{VideoOptions, VideoQuality, VideoSearchOptions};
+use scraper::{Html, Selector};
+use std::collections::HashMap;
+use std::fs;
 use std::path::{Path, PathBuf};
+
+use self::initial_data::InitialData;
+
+mod initial_data;
 
 #[derive(Debug, PartialEq, Clone)]
 /// Implementation of a YouTube downloader.
@@ -12,18 +20,19 @@ pub struct YoutubeDownloader {
     add_underscores_in_name: bool,
     video_name: Option<String>,
     video: Option<Video>,
+    is_playlist: bool,
 }
 
 impl YoutubeDownloader {
-    /// Creates a new instance of the `YoutubeDownloader` with the provided YouTube video link.
+    /// Creates a new instance of the [`YoutubeDownloader`] with the provided YouTube video link.
     ///
     /// ### Arguments
     ///
-    /// * `link` - The YouTube video link to download.
+    /// * `link` - The YouTube video/playlist link to download.
     ///
     /// ### Returns
     ///
-    /// Returns a `Result` containing the `YoutubeDownloader` instance on success, or a `DownloadError` if parsing the URL fails or if the URL is invalid.
+    /// Returns a [`Result`] containing the [`YoutubeDownloader`] instance on success, or a [`DownloadError`] if parsing the URL fails or if the URL is invalid.
     pub fn new(link: &str) -> Result<Self, DownloadError> {
         let url = Self::parse_url(
             link,
@@ -36,18 +45,30 @@ impl YoutubeDownloader {
             ));
         }
 
+        let mut is_playlist = false;
+        let path_segments = url
+            .path_segments()
+            .ok_or_else(|| DownloadError::InvalidUrl("Video Not Found".to_owned()))?;
+
+        for segment in path_segments {
+            if segment == "playlist" {
+                is_playlist = true;
+            }
+        }
+
         Ok(Self {
             url,
             filter: VideoSearchOptions::VideoAudio,
             add_underscores_in_name: false,
             video_name: None,
             video: None,
+            is_playlist,
         })
     }
 
     /// Retrieves information about the video.
     ///
-    /// This method returns a `Result` containing a `Video` instance, which represents the video and allows accessing its
+    /// This method returns a [`Result`] containing a [`Video`] instance, which represents the video and allows accessing its
     /// **metadata** and downloading it.
     pub fn get_video(&self) -> Result<Video, DownloadError> {
         let filter = self.filter.to_owned();
@@ -62,6 +83,41 @@ impl YoutubeDownloader {
             .map_err(|_| DownloadError::VideoNotFound("Video Not Found".to_owned()))?;
 
         Ok(video)
+    }
+
+    pub async fn get_playlist(&self) -> Result<(), DownloadError> {
+        let client = Client::new();
+
+        let response = client
+            .get(self.url.to_owned())
+            .headers(HeaderMapBuilder::new().with_user_agent().build())
+            .send()
+            .await?
+            .text()
+            .await?;
+        self.scrape_playlist_page(response);
+
+        Ok(())
+    }
+    fn scrape_playlist_page(&self, response: String) {
+        let document = Html::parse_document(&response);
+        let scripts_selector = Selector::parse("script").unwrap();
+
+        let string_object = document
+            .select(&scripts_selector)
+            .filter(|x| x.inner_html().contains("var ytInitialData ="))
+            .map(|x| x.inner_html().replace("var ytInitialData =", ""))
+            .next()
+            .unwrap_or(String::from(""))
+            .trim()
+            .trim_end_matches(';')
+            .to_string();
+
+        println!("{}", &string_object[string_object.len()-100..]);
+
+        let hash: InitialData = serde_json::from_str(&string_object).unwrap();
+
+        println!("{:?}", hash)
     }
 
     /// Enables renaming the downloaded video with underscores.
@@ -112,6 +168,13 @@ impl Downloader for YoutubeDownloader {
                 "Path must point to a directory. That is not the case for `{}`",
                 path.display()
             )));
+        }
+
+        if self.is_playlist {
+            let video = self.get_playlist().await?;
+            println!("{:?}", video);
+
+            return Ok(());
         }
 
         let video = self.get_video()?;

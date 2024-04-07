@@ -15,16 +15,17 @@ use url::Url;
 
 /// A trait representing a downloader.
 pub trait Downloader {
-    /// Parses the provided URL string into a `Url` struct.
+    /// Parses the provided URL string into a [`Url`] struct.
     ///
     /// ### Arguments
     ///
     /// * `link` - The URL string to parse.
-    /// * `expected_url_format` - Optional expected URL format to use for parsing. Defaults to `"https://www.<domain>.<extension>/<parameters>"`.
+    /// * `expected_url_format` - Optional expected URL format to use for parsing. It's only used as advice displayed in error messages. 
+    /// Defaults to `"https://www.<domain>.<extension>/<parameters>"`.
     ///
     /// ### Returns
     ///
-    /// Returns a `Result` containing the parsed `Url` on success, or a `DownloadError` if parsing fails.
+    /// Returns a [`Result`] containing the parsed [`Url`] on success, or a [`DownloadError`] if parsing fails.
     fn parse_url(link: &str, expected_url_format: Option<&str>) -> Result<Url, DownloadError> {
         let expected_format =
             expected_url_format.unwrap_or("https://www.<domain>.<extension>/<parameters>");
@@ -45,7 +46,7 @@ pub trait Downloader {
     ///
     /// ### Returns
     ///
-    /// Returns a future representing the download operation, which resolves to a `Result` indicating success or failure.
+    /// Returns a future representing the download operation, which resolves to a [`Result`] indicating success or failure.
     fn download(&self) -> impl std::future::Future<Output = Result<(), DownloadError>> + Send
     where
         Self: Sync,
@@ -61,7 +62,7 @@ pub trait Downloader {
     ///
     /// ### Returns
     ///
-    /// Returns a future representing the download operation, which resolves to a `Result` indicating success or failure.
+    /// Returns a future representing the download operation, which resolves to a [`Result`] indicating success or failure.
     fn download_to<P: AsRef<Path> + std::marker::Send>(
         &self,
         path: P,
@@ -73,7 +74,7 @@ pub trait Downloader {
     ///
     /// ### Returns
     ///
-    /// Returns a `Result` indicating success or failure of the download operation.
+    /// Returns a [`Result`] indicating success or failure of the download operation.
     fn blocking_download(&self) -> Result<(), DownloadError>
     where
         Self: Sync,

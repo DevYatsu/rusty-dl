@@ -14,7 +14,7 @@ mod details;
 mod utils;
 
 /*
-THIS MESSAGE IS COPY-PASTE FROM `https://github.com/inteoryx/twitter-video-dl.git` repository from which this `TwitterDownloader` is an implementation of.
+THIS MESSAGE IS COPY-PASTE FROM `https://github.com/inteoryx/twitter-video-dl.git` repository from which this [`TwitterDownloader`] is an implementation of.
 
 Here's how this works:
 1. To download a video you need a Bearer Token and a guest token.  The guest token definitely expires and the Bearer Token could, though in practice I don't think it does.
@@ -40,7 +40,7 @@ or maybe not because we do not want the crate to depend on any exterior file, th
 */
 
 #[derive(Clone)]
-/// The `TwitterDownloader` is a Rust implementation inspired by the functionality of the [twitter_video-dl](https://github.com/inteoryx/twitter-video-dl.git) repository.
+/// The [`TwitterDownloader`] is a Rust implementation inspired by the functionality of the [twitter_video-dl](https://github.com/inteoryx/twitter-video-dl.git) repository.
 pub struct TwitterDownloader {
     url: Url,
     tweet_id: String,
@@ -67,7 +67,7 @@ struct GuestTokenResponse {
 }
 
 impl TwitterDownloader {
-    /// Creates a new instance of `TwitterDownloader` with the provided Twitter tweet link.
+    /// Creates a new instance of [`TwitterDownloader`] with the provided Twitter tweet link.
     ///
     /// # Arguments
     ///
@@ -75,7 +75,7 @@ impl TwitterDownloader {
     ///
     /// # Returns
     ///
-    /// Returns a `Result` containing the `TwitterDownloader` instance on success, or a `DownloadError` if parsing the URL fails or if the URL is invalid.
+    /// Returns a [`Result`] containing the [`TwitterDownloader`] instance on success, or a [`DownloadError`] if parsing the URL fails or if the URL is invalid.
     pub fn new(link: &str) -> Result<Self, DownloadError> {
         let url = Self::parse_url(
             link,
@@ -113,11 +113,11 @@ impl TwitterDownloader {
     ///
     /// ### Arguments
     ///
-    /// * `callback` - A function that takes a `TwitterMedia` instance and returns a `String`.
+    /// * `callback` - A function that takes a [`TwitterMedia`] instance and returns a [`String`].
     ///
     /// ### Returns
     ///
-    /// Returns a mutable reference to the modified `TwitterDownloader`.
+    /// Returns a mutable reference to the modified [`TwitterDownloader`].
     pub fn set_name_callback<F>(&mut self, callback: F) -> &mut Self
     where
         F: Fn(usize, TwitterMedia) -> String + Send + Sync + 'static,
@@ -133,7 +133,7 @@ impl TwitterDownloader {
     ///
     /// ### Returns
     ///
-    /// Returns a `Result` containing a vector of `MediaEntity` instances on success, or a `DownloadError` if the retrieval fails.
+    /// Returns a [`Result`] containing a vector of [`MediaEntity]` instances on success, or a [`DownloadError`] if the retrieval fails.
     async fn get_tweet_medias(&self) -> Result<Vec<MediaEntity>, DownloadError> {
         let (bearer_token, guest_token) = self.get_tokens().await?;
 
@@ -393,7 +393,7 @@ impl TwitterDownloader {
     ///
     /// ### Returns
     ///
-    /// Returns a `Result` indicating success or failure of the download operation.
+    /// Returns a [`Result`] indicating success or failure of the download operation.
     pub async fn download_as_tweets_folder_to(
         &self,
         path: &std::path::Path,
@@ -411,7 +411,7 @@ impl TwitterDownloader {
     ///
     /// ### Returns
     ///
-    /// Returns a `Result` indicating success or failure of the download operation.
+    /// Returns a [`Result`] indicating success or failure of the download operation.
     pub fn blocking_download_as_tweets_folder_to(
         &self,
         path: &std::path::Path,

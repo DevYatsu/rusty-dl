@@ -2065,6 +2065,7 @@ dependencies = [
  "regex",
  "reqwest 0.12.3",
  "rusty_ytdl",
+ "scraper",
  "serde",
  "serde_json",
  "serde_urlencoded",

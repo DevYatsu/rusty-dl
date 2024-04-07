@@ -7,13 +7,13 @@ use tokio::{fs::File, io::AsyncWriteExt};
 use url::Url;
 
 #[derive(Debug, Clone)]
-/// The `ResourceDownloader` is designed for downloading resources directly from the internet, such as files hosted on a website.
+/// The [`ResourceDownloader`] is designed for downloading resources directly from the internet, such as files hosted on a website.
 pub struct ResourceDownloader {
     url: Url,
 }
 
 impl ResourceDownloader {
-    /// Creates a new instance of `ResourceDownloader` with the provided URL.
+    /// Creates a new instance of [`ResourceDownloader`] with the provided URL.
     ///
     /// # Arguments
     ///
@@ -21,7 +21,7 @@ impl ResourceDownloader {
     ///
     /// # Returns
     ///
-    /// Returns a `Result` containing the `ResourceDownloader` instance on success, or a `DownloadError` if parsing the URL fails or if the URL is invalid.
+    /// Returns a [`Result`] containing the [`ResourceDownloader`] instance on success, or a [`DownloadError`] if parsing the URL fails or if the URL is invalid.
     pub fn new(url: &str) -> Result<Self, DownloadError> {
         let url = Self::parse_url(url, None)?;
 
@@ -59,11 +59,11 @@ impl Downloader for ResourceDownloader {
     ///
     /// ### Returns
     ///
-    /// A future representing the download operation, which resolves to a `Result` indicating success or failure.
+    /// A future representing the download operation, which resolves to a [`Result`] indicating success or failure.
     ///
     /// ### Errors
     ///
-    /// Returns a `DownloadError` if there are any issues during the download process.
+    /// Returns a [`DownloadError`] if there are any issues during the download process.
     async fn download_to<P: AsRef<Path> + std::marker::Send>(
         &self,
         file_path: P,
