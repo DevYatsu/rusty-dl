@@ -52,7 +52,6 @@ pub struct TwitterDownloader {
 pub enum MediaKind {
     Image,
     Video,
-    Gif,
 }
 
 use self::{
@@ -82,7 +81,7 @@ impl TwitterDownloader {
             Some("https://www.twitter.com/<USERNAME>/status/<TWEET_ID>"),
         )?;
 
-        if !Self::is_valid_twitter_url(&url) {
+        if !Self::is_valid_url(&url) {
             return Err(DownloadError::InvalidUrl(
                 "Invalid URL! The domain must be either 'www.twitter.com' or 'www.x.com'."
                     .to_owned(),
@@ -99,12 +98,29 @@ impl TwitterDownloader {
         })
     }
 
-    /// Checks if the given URL is a valid Twitter URL.
-    fn is_valid_twitter_url(url: &Url) -> bool {
-        url.domain() == Some("twitter.com")
-            || url.domain() == Some("x.com")
-            || url.domain() == Some("www.twitter.com")
-            || url.domain() == Some("www.x.com")
+    /// Retrieves the media entities associated with the Twitter tweet.
+    ///
+    /// This method asynchronously fetches and returns the media entities (such as videos and images) associated with the Twitter tweet.
+    ///
+    /// ### Returns
+    ///
+    /// Returns a `Result` containing a vector of `MediaEntity` instances on success, or a `DownloadError` if the retrieval fails.
+    async fn get_tweet_medias(&self) -> Result<Vec<MediaEntity>, DownloadError> {
+        let (bearer_token, guest_token) = self.get_tokens().await?;
+
+        let tweet_details = self.get_tweet_details(&bearer_token, &guest_token).await?;
+
+        // medias contain all the informations regarding the tweet videos and images
+        let opt_medias = tweet_details.data.tweet_result.result.legacy.entities.media;
+
+        let medias = opt_medias.ok_or_else(|| {
+            DownloadError::TwitterError(format!(
+                "The tweet with ID `{}` does not contain any associated media.",
+                self.tweet_id()
+            ))
+        })?;
+
+        Ok(medias)
     }
 
     /// Extracts the status ID and tweet ID from the Twitter tweet URL.
@@ -124,16 +140,15 @@ impl TwitterDownloader {
         )))
     }
 
+    /// Sets the downloader to download only images from the Twitter tweet.
     pub fn only_images(&mut self) -> &mut Self {
         self.only_media_kind = Some(MediaKind::Image);
         self
     }
+
+    /// Sets the downloader to download only videos from the Twitter tweet.
     pub fn only_videos(&mut self) -> &mut Self {
         self.only_media_kind = Some(MediaKind::Video);
-        self
-    }
-    pub fn only_gifs(&mut self) -> &mut Self {
-        self.only_media_kind = Some(MediaKind::Gif);
         self
     }
 
@@ -388,53 +403,39 @@ impl Downloader for TwitterDownloader {
             )));
         }
 
-        let (bearer_token, guest_token) = self.get_tokens().await?;
+        let medias = self.get_tweet_medias().await?;
 
-        let tweet_details = self.get_tweet_details(&bearer_token, &guest_token).await?;
-
-        // medias contain all the informations regarding the tweet videos and images
-        let opt_medias = tweet_details.data.tweet_result.result.legacy.entities.media;
-
-        if let Some(medias) = opt_medias {
-            let media_infos = medias
-                .iter()
-                .map(|media_entity| {
-                    media_entity.try_into().map_err(|e| {
-                        DownloadError::TwitterError(format!(
-                            "{} in `{}` tweet details.",
-                            e,
-                            self.tweet_id()
-                        ))
-                    })
+        let media_infos = medias
+            .iter()
+            .map(|media_entity| {
+                media_entity.try_into().map_err(|e| {
+                    DownloadError::TwitterError(format!(
+                        "{} in `{}` tweet details.",
+                        e,
+                        self.tweet_id()
+                    ))
                 })
-                .collect::<Result<Vec<TwitterMedia>, DownloadError>>()?;
+            })
+            .collect::<Result<Vec<TwitterMedia>, DownloadError>>()?;
 
-            let download_links: Vec<(&str, Option<&str>)> = media_infos
-                .iter()
-                .map(TwitterMedia::get_download_url_and_ext)
-                .collect();
+        let download_links: Vec<(&str, Option<&str>)> = media_infos
+            .iter()
+            .filter(|x| TwitterMedia::filter_media_kind(x, self.only_media_kind.as_ref()))
+            .map(TwitterMedia::get_download_url_and_ext)
+            .collect();
 
-            for (index, (url, extension)) in download_links.iter().enumerate() {
-                let rsrc_downloader = ResourceDownloader::new(url).map_err(|_| {
-                    DownloadError::TwitterError(format!("Invalid Media File path: `{}`", url))
-                })?;
+        for (index, (url, extension)) in download_links.iter().enumerate() {
+            let rsrc_downloader = ResourceDownloader::new(url).map_err(|_| {
+                DownloadError::TwitterError(format!("Invalid Media File path: `{}`", url))
+            })?;
 
-                // index + 1 to keep consistency with tweeter medias indexing, from 1 to 4 (included)
-                let path = if let Some(ext) = extension {
-                    path.join(format!("{}.{}", index + 1, ext))
-                } else {
-                    path.join((index + 1).to_string())
-                };
+            let filename = extension.map_or_else(
+                || format!("{}", index + 1),
+                |ext| format!("{}.{}", index + 1, ext),
+            );
+            let file_path = path.join(filename);
 
-                rsrc_downloader.download_to(&path).await?;
-            }
-
-            // and download from url
-        } else {
-            return Err(DownloadError::TwitterError(format!(
-                "The tweet with ID `{}` does not contain any associated media.",
-                self.tweet_id()
-            )));
+            rsrc_downloader.download_to(&file_path).await?;
         }
 
         Ok(())
@@ -442,6 +443,13 @@ impl Downloader for TwitterDownloader {
 
     async fn download(&self) -> Result<(), DownloadError> {
         self.download_to(Path::new("./")).await
+    }
+
+    fn is_valid_url(url: &Url) -> bool {
+        url.domain() == Some("twitter.com")
+            || url.domain() == Some("x.com")
+            || url.domain() == Some("www.twitter.com")
+            || url.domain() == Some("www.x.com")
     }
 }
 
@@ -485,6 +493,21 @@ impl<'a> TwitterMedia<'a> {
 
                 (&variant.url, extension)
             }
+        }
+    }
+
+    pub fn filter_media_kind(&self, media_kind: Option<&MediaKind>) -> bool {
+        match media_kind {
+            None => true,
+            Some(_) if media_kind == Some(&MediaKind::Image) => match self {
+                TwitterMedia::Image { .. } => true,
+                _ => false,
+            },
+            Some(_) if media_kind == Some(&MediaKind::Video) => match self {
+                TwitterMedia::Video { .. } => true,
+                _ => false,
+            },
+            Some(_) => false,
         }
     }
 }

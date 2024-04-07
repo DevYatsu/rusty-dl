@@ -38,6 +38,9 @@ pub trait Downloader {
         Ok(url)
     }
 
+    /// Checks if the given URL is a valid Download URL.
+    fn is_valid_url(url: &Url) -> bool;
+
     /// Downloads the file to the current working directory.
     ///
     /// ### Returns

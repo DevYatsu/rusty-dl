@@ -13,12 +13,29 @@ pub struct ResourceDownloader {
 }
 
 impl ResourceDownloader {
+    /// Creates a new instance of `ResourceDownloader` with the provided URL.
+    ///
+    /// # Arguments
+    ///
+    /// * `url` - The URL of the resource to download.
+    ///
+    /// # Returns
+    ///
+    /// Returns a `Result` containing the `ResourceDownloader` instance on success, or a `DownloadError` if parsing the URL fails or if the URL is invalid.
     pub fn new(url: &str) -> Result<Self, DownloadError> {
         let url = Self::parse_url(url, None)?;
+
+        if !Self::is_valid_url(&url) {
+            return Err(DownloadError::InvalidUrl(
+                "Invalid URL! The URL must start with 'http://' or 'https://' and include a host."
+                    .to_owned(),
+            ));
+        }
 
         Ok(Self { url })
     }
 
+    /// Sends a GET request to the URL of the resource and returns the response.
     async fn send_request(&self) -> Result<Response, DownloadError> {
         let client = Client::new();
 
@@ -66,5 +83,9 @@ impl Downloader for ResourceDownloader {
         file.write_all(&content).await?;
 
         Ok(())
+    }
+
+    fn is_valid_url(url: &Url) -> bool {
+        url.has_host() && (url.scheme() == "https" || url.scheme() == "http")
     }
 }

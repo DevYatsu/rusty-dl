@@ -1,6 +1,6 @@
 use crate::prelude::{DownloadError, Downloader};
 use reqwest::Url;
-use rusty_ytdl::FFmpegArgs;
+use rusty_ytdl::{FFmpegArgs, Video};
 use rusty_ytdl::{VideoOptions, VideoQuality, VideoSearchOptions};
 use std::path::{Path, PathBuf};
 
@@ -11,6 +11,7 @@ pub struct YoutubeDownloader {
     filter: VideoSearchOptions,
     add_underscores_in_name: bool,
     video_name: Option<String>,
+    video: Option<Video>,
 }
 
 impl YoutubeDownloader {
@@ -29,11 +30,7 @@ impl YoutubeDownloader {
             Some("https://www.youtube.com/v=<VIDEO_ID> or https://www.youtu.be/<VIDEO_ID>/"),
         )?;
 
-        if url.domain() != Some("www.youtube.com")
-            && url.domain() != Some("youtube.com")
-            && url.domain() != Some("www.youtu.be")
-            && url.domain() != Some("youtu.be")
-        {
+        if !Self::is_valid_url(&url) {
             return Err(DownloadError::InvalidUrl(
                 "Invalid URL! The domain must be 'youtube.com'.".to_owned(),
             ));
@@ -44,7 +41,27 @@ impl YoutubeDownloader {
             filter: VideoSearchOptions::VideoAudio,
             add_underscores_in_name: false,
             video_name: None,
+            video: None,
         })
+    }
+
+    /// Retrieves information about the video.
+    ///
+    /// This method returns a `Result` containing a `Video` instance, which represents the video and allows accessing its
+    /// **metadata** and downloading it.
+    pub fn get_video(&self) -> Result<Video, DownloadError> {
+        let filter = self.filter.to_owned();
+
+        let video_options = VideoOptions {
+            quality: VideoQuality::Highest,
+            filter,
+            ..Default::default()
+        };
+
+        let video = rusty_ytdl::Video::new_with_options(self.url.clone(), video_options)
+            .map_err(|_| DownloadError::VideoNotFound("Video Not Found".to_owned()))?;
+
+        Ok(video)
     }
 
     /// Enables renaming the downloaded video with underscores.
@@ -93,16 +110,7 @@ impl Downloader for YoutubeDownloader {
             )));
         }
 
-        let filter = self.filter.to_owned();
-
-        let video_options = VideoOptions {
-            quality: VideoQuality::Highest,
-            filter: filter.to_owned(),
-            ..Default::default()
-        };
-
-        let video = rusty_ytdl::Video::new_with_options(self.url.clone(), video_options)
-            .map_err(|_| DownloadError::VideoNotFound("Video Not Found".to_owned()))?;
+        let video = self.get_video()?;
         let video_info = video.get_basic_info().await?;
 
         let base_path: PathBuf = path.into();
@@ -122,7 +130,7 @@ impl Downloader for YoutubeDownloader {
             tokio::fs::create_dir_all(parent).await?
         }
 
-        match &filter {
+        match &self.filter {
             VideoSearchOptions::VideoAudio => {
                 video_path.set_extension("mp4");
                 video.download(video_path).await?
@@ -160,5 +168,12 @@ impl Downloader for YoutubeDownloader {
         }
 
         Ok(())
+    }
+
+    fn is_valid_url(url: &Url) -> bool {
+        url.domain() == Some("youtube.com")
+            || url.domain() == Some("youtu.be")
+            || url.domain() == Some("www.youtube.com")
+            || url.domain() == Some("www.youtu.be")
     }
 }

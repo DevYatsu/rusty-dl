@@ -12,10 +12,11 @@ Rusty_dl Library is a versatile crate designed for effortlessly fetching a wide 
 
 ### In the Library
 
-- [ ] Add features to download content to specific directories
-- [ ] Implement functions to retrieve metadata on downloaded media
+- [x] Add features to download content to specific directories
+- [x] Implement functions to retrieve metadata on downloaded media
 - [x] Allow users to specify whether spaces in file names should be replaced by underscores
-- [ ] Add support for downloading images-only or videos-only from tweets
+- [x] Add support for downloading images-only or videos-only from tweets
+- [ ] Add examples
 
 ### Other
 
