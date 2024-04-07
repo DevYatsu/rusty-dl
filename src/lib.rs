@@ -1,12 +1,12 @@
 pub mod errors;
 pub mod header;
 
-#[cfg(feature = "resource")]
+// #[cfg(feature = "resource")]
 pub mod resource;
-#[cfg(feature = "twitter")]
+// #[cfg(feature = "twitter")]
 pub mod twitter;
 
-#[cfg(feature = "youtube")]
+// #[cfg(feature = "youtube")]
 pub mod youtube;
 
 use crate::errors::DownloadError;

@@ -10,12 +10,12 @@ pub enum DownloadError {
     FailedToBuildBlockingRuntime(String),
     Downloader(String),
 
-    #[cfg(feature = "twitter")]
+    // #[cfg(feature = "twitter")]
     TwitterError(String),
 
-    #[cfg(feature = "youtube")]
+    // #[cfg(feature = "youtube")]
     Video(rusty_ytdl::VideoError),
-    #[cfg(feature = "youtube")]
+    // #[cfg(feature = "youtube")]
     YoutubeError(String),
 }
 
@@ -29,11 +29,11 @@ impl fmt::Display for DownloadError {
             DownloadError::VideoNotFound(err) => write!(f, "{}", err),
             DownloadError::FailedToBuildBlockingRuntime(err) => write!(f, "{}", err),
             DownloadError::Downloader(err) => write!(f, "{}", err),
-            #[cfg(feature = "youtube")]
+            // #[cfg(feature = "youtube")]
             DownloadError::Video(err) => write!(f, "{}", err),
-            #[cfg(feature = "twitter")]
+            // #[cfg(feature = "twitter")]
             DownloadError::TwitterError(err) => write!(f, "{}", err),
-            #[cfg(feature = "youtube")]
+            // #[cfg(feature = "youtube")]
             DownloadError::YoutubeError(err) => write!(f, "{}", err),
         }
     }
@@ -49,11 +49,11 @@ impl error::Error for DownloadError {
             DownloadError::VideoNotFound(_) => None,
             DownloadError::FailedToBuildBlockingRuntime(_) => None,
             DownloadError::Downloader(_) => None,
-            #[cfg(feature = "youtube")]
+            // #[cfg(feature = "youtube")]
             DownloadError::Video(err) => Some(err),
-            #[cfg(feature = "twitter")]
+            // #[cfg(feature = "twitter")]
             DownloadError::TwitterError(_) => None,
-            #[cfg(feature = "youtube")]
+            // #[cfg(feature = "youtube")]
             DownloadError::YoutubeError(_) => None,
         }
     }
@@ -65,7 +65,7 @@ impl From<reqwest::Error> for DownloadError {
     }
 }
 
-#[cfg(feature = "youtube")]
+// #[cfg(feature = "youtube")]
 impl From<rusty_ytdl::VideoError> for DownloadError {
     fn from(value: rusty_ytdl::VideoError) -> Self {
         Self::Video(value)
