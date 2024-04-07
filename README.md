@@ -1,6 +1,6 @@
-# downloading
+# rusty_dl
 
-Rust crate for downloading various content types like YouTube videos, tweets medias (videos, images, gifs) and medias directly on the web.
+Rusty_dl Library is a versatile crate designed for effortlessly fetching a wide range of content types, including YouTube videos, tweet media (such as videos, images, and gifs), and eventually various other media directly from the web.
 
 ## Features
 
