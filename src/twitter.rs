@@ -1,5 +1,9 @@
 use std::{ffi::OsStr, path::Path, sync::Arc};
 
+use self::{
+    details::{MediaEntity, TweetDetails, VideoInfo},
+    utils::RequestDetails,
+};
 use crate::{
     header::HeaderMapBuilder,
     prelude::{DownloadError, Downloader},
@@ -9,9 +13,10 @@ use crate::{
 use percent_encoding::{utf8_percent_encode, NON_ALPHANUMERIC};
 use regex::Regex;
 use reqwest::{header::HeaderValue, Client, Response, Url};
+use serde::Deserialize;
 
 mod details;
-mod utils;
+pub mod utils;
 
 /*
 THIS MESSAGE IS COPY-PASTE FROM `https://github.com/inteoryx/twitter-video-dl.git` repository from which this [`TwitterDownloader`] is an implementation of.
@@ -39,30 +44,33 @@ we should do the same as in the python version, that is whenever new variables a
 or maybe not because we do not want the crate to depend on any exterior file, that implies we should get rid of the json
 */
 
+/// The `TwitterDownloader` is a Rust implementation inspired by the functionality of the `twitter-video-dl` python repository.
 #[derive(Clone)]
-/// The [`TwitterDownloader`] is a Rust implementation inspired by the functionality of the [twitter_video-dl](https://github.com/inteoryx/twitter-video-dl.git) repository.
 pub struct TwitterDownloader {
+    /// The URL of the Twitter content.
     url: Url,
+    /// The ID of the tweet.
     tweet_id: String,
+    /// The status ID.
     status_id: String,
+    /// Specifies the kind of media to download.
     only_media_kind: Option<MediaKind>,
+    /// Callback function for naming downloaded media.
     names_callback: Arc<dyn Fn(usize, TwitterMedia) -> String + Send + Sync>,
 }
 
+/// Represents the kind of media to download from Twitter.
 #[derive(Debug, PartialEq, PartialOrd, Ord, Eq, Clone)]
 pub enum MediaKind {
+    /// Indicates an image.
     Image,
+    /// Indicates a video.
     Video,
 }
 
-use self::{
-    details::{MediaEntity, TweetDetails, VideoInfo},
-    utils::RequestDetails,
-};
-use serde::Deserialize;
-
 #[derive(Debug, Deserialize)]
-struct GuestTokenResponse {
+pub struct GuestTokenResponse {
+    /// The guest token for accessing Twitter content.
     guest_token: String,
 }
 

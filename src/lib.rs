@@ -20,7 +20,7 @@ pub trait Downloader {
     /// ### Arguments
     ///
     /// * `link` - The URL string to parse.
-    /// * `expected_url_format` - Optional expected URL format to use for parsing. It's only used as advice displayed in error messages. 
+    /// * `expected_url_format` - Optional expected URL format to use for parsing. It's only used as advice displayed in error messages.
     /// Defaults to `"https://www.<domain>.<extension>/<parameters>"`.
     ///
     /// ### Returns

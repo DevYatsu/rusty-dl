@@ -1,13 +1,24 @@
 use crate::prelude::DownloadError;
 use serde::{Deserialize, Serialize};
 
+/// Represents the details of a Twitter request when fetching a tweet.
 #[derive(Debug, Serialize, Deserialize, Default)]
 pub struct RequestDetails {
+    /// Features of the request.
     pub features: Features,
+
+    /// Variables of the request.
     pub variables: Variables,
 }
 
+/// Retrieves the request details for a Twitter request.
+///
+/// ### Errors
+///
+/// Returns a [`DownloadError`] if there is an issue retrieving the request details.
 pub async fn retrieve_request_details() -> Result<RequestDetails, DownloadError> {
+    // in the past i was using a json to kee the request details but it's not convenient enough to be used in a library.
+
     // let request_details_file = "RequestDetails.json";
 
     // // Read the JSON file into a string
@@ -26,6 +37,7 @@ pub async fn retrieve_request_details() -> Result<RequestDetails, DownloadError>
     Ok(RequestDetails::default())
 }
 
+/// Features of a Twitter request.
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Features {
     responsive_web_graphql_exclude_directive_enabled: bool,
@@ -49,6 +61,7 @@ pub struct Features {
     responsive_web_enhance_cards_enabled: bool,
 }
 
+/// Variables of a Twitter request.
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Variables {
     with_rux_injections: bool,
@@ -83,11 +96,11 @@ impl Variables {
 
 #[derive(Debug, serde::Deserialize)]
 pub struct ErrorResponse {
-    errors: Vec<Error>,
+    pub errors: Vec<Error>,
 }
 
 #[derive(Debug, serde::Deserialize)]
-struct Error {
+pub struct Error {
     pub message: String,
     pub extensions: Extension,
     pub code: u32,
