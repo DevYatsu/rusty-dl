@@ -108,7 +108,14 @@ pub trait Downloader {
 
 pub mod prelude {
     pub use crate::errors::DownloadError;
-    pub use crate::twitter::TwitterDownloader;
-    pub use crate::youtube::YoutubeDownloader;
     pub use crate::Downloader;
+
+    #[cfg(feature = "resource")]
+    pub use crate::resource::ResourceDownloader;
+
+    #[cfg(feature = "twitter")]
+    pub use crate::twitter::TwitterDownloader;
+
+    #[cfg(feature = "youtube")]
+    pub use crate::youtube::YoutubeDownloader;
 }
