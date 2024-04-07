@@ -45,12 +45,14 @@ pub struct TwitterDownloader {
     url: Url,
     tweet_id: String,
     status_id: String,
-    only_media_kind: Option<MediaKind>
+    only_media_kind: Option<MediaKind>,
 }
 
 #[derive(Debug, PartialEq, PartialOrd, Ord, Eq, Clone)]
 pub enum MediaKind {
-    Image, Video, Gif
+    Image,
+    Video,
+    Gif,
 }
 
 use self::{
@@ -93,7 +95,7 @@ impl TwitterDownloader {
             url,
             status_id,
             tweet_id,
-            only_media_kind: None
+            only_media_kind: None,
         })
     }
 

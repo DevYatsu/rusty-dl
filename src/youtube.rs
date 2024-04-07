@@ -9,9 +9,8 @@ use std::path::{Path, PathBuf};
 pub struct YoutubeDownloader {
     url: Url,
     filter: VideoSearchOptions,
-    to_mp3: bool,
     add_underscores_in_name: bool,
-    video_name: Option<String>
+    video_name: Option<String>,
 }
 
 impl YoutubeDownloader {
@@ -43,15 +42,15 @@ impl YoutubeDownloader {
         Ok(Self {
             url,
             filter: VideoSearchOptions::VideoAudio,
-            to_mp3: false,
             add_underscores_in_name: false,
-            video_name: None
+            video_name: None,
         })
     }
 
     /// Enables renaming the downloaded video with underscores.
-    pub fn rename_with_underscores(&mut self) {
+    pub fn rename_with_underscores(&mut self) -> &mut Self {
         self.add_underscores_in_name = true;
+        self
     }
 
     /// Sets a custom name for the downloaded video.
@@ -59,8 +58,10 @@ impl YoutubeDownloader {
     /// ### Arguments
     ///
     /// * `new_name` - The new name for the downloaded video.
-    pub fn set_name(&mut self, new_name: String) {
+    pub fn set_name(&mut self, new_name: String) -> &mut Self {
         self.video_name = Some(new_name);
+
+        self
     }
 
     /// Sets the filter to download only the audio of the video.
@@ -81,13 +82,6 @@ impl YoutubeDownloader {
 
         self
     }
-
-    /// Enables conversion of downloaded video to MP3 format.
-    pub fn to_mp3(&mut self) -> &mut Self {
-        self.to_mp3 = true;
-
-        self
-    }
 }
 
 impl Downloader for YoutubeDownloader {
@@ -99,11 +93,8 @@ impl Downloader for YoutubeDownloader {
             )));
         }
 
-        let filter = if self.to_mp3 {
-            VideoSearchOptions::Audio
-        } else {
-            self.filter.to_owned()
-        };
+        let filter = self.filter.to_owned();
+
         let video_options = VideoOptions {
             quality: VideoQuality::Highest,
             filter: filter.to_owned(),
@@ -116,41 +107,56 @@ impl Downloader for YoutubeDownloader {
 
         let base_path: PathBuf = path.into();
 
-        let mut video_name = self.video_name.to_owned().unwrap_or(video_info.video_details.title);
+        let mut video_name = self
+            .video_name
+            .to_owned()
+            .unwrap_or(video_info.video_details.title);
 
         if self.add_underscores_in_name {
             video_name = video_name.replace(" ", "_");
         }
 
-        let new_path = base_path.join(video_name);
-        let title = new_path.display();
+        let mut video_path = base_path.join(video_name);
 
-        if let Some(parent) = new_path.parent() {
+        if let Some(parent) = video_path.parent() {
             tokio::fs::create_dir_all(parent).await?
         }
 
         match &filter {
-            VideoSearchOptions::VideoAudio => video.download(format!("{title}.mp4")).await?,
-            VideoSearchOptions::Video => video.download(format!("{title}.mp4")).await?,
+            VideoSearchOptions::VideoAudio => {
+                video_path.set_extension("mp4");
+                video.download(video_path).await?
+            }
+            VideoSearchOptions::Video => {
+                video_path.set_extension("mp4");
+                video.download(video_path).await?
+            }
             VideoSearchOptions::Audio => {
-                //todo! for now only working if `ffmpeg` is installed on the computer
-                // try to implement a way using `symphonia` crate maybe
-                if self.to_mp3 {
-                    video
-                        .download_with_ffmpeg(
-                            format!("{title}.mp3"),
-                            Some(FFmpegArgs {
-                                format: Some("mp3".to_string()),
-                                audio_filter: None,
-                                video_filter: None,
-                            }),
-                        )
-                        .await?
-                } else {
-                    video.download(format!("{title}.webm")).await?
+                video_path.set_extension("mp3");
+                println!("{}", video_path.display());
+
+                // `ffmpeg` must be installed on the computer to download a mp3 file
+
+                match video
+                    .download_with_ffmpeg(
+                        video_path.to_owned(),
+                        Some(FFmpegArgs {
+                            format: Some("mp3".to_string()),
+                            audio_filter: None,
+                            video_filter: None,
+                        }),
+                    )
+                    .await
+                {
+                    Ok(v) => v,
+                    Err(_) => {
+                        // If download with ffmpeg fails, try downloading without ffmpeg
+                        video_path.set_extension("webm");
+                        video.download(video_path).await?
+                    }
                 }
             }
-            VideoSearchOptions::Custom(_) => video.download(format!("{title}")).await?,
+            VideoSearchOptions::Custom(_) => video.download(video_path).await?,
         }
 
         Ok(())
