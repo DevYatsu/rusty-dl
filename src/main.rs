@@ -30,3 +30,7 @@ async fn main() -> Result<(), DownloadError> {
 
     Ok(())
 }
+#[cfg(not(feature = "dev"))]
+fn main() {
+
+}
