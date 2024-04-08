@@ -152,7 +152,7 @@ impl YoutubeDownloader {
         let client = Client::new();
 
         let response = client
-            .get(self.url.to_owned())
+            .get(self.url.as_str())
             .headers(HeaderMapBuilder::new().with_user_agent().build())
             .send()
             .await?
@@ -330,7 +330,11 @@ impl YoutubeDownloader {
     ///
     /// Returns a `DownloadError` if any error occurs during the download process, such as failure to create directories,
     /// fetching playlist information, or downloading the videos.
-    async fn download_playlist_to(&self, path: &Path) -> Result<(), DownloadError> {
+    async fn download_playlist_to<P: AsRef<Path>>(
+        &self,
+        folder_path: P,
+    ) -> Result<(), DownloadError> {
+        let path = folder_path.as_ref();
         let playlist = self.get_playlist().await?;
 
         if let Some(parent) = path.parent() {
@@ -389,6 +393,12 @@ impl Downloader for YoutubeDownloader {
     }
 
     async fn download(&self) -> Result<(), DownloadError> {
+        if self.is_playlist {
+            self.download_playlist_to("./").await?;
+
+            return Ok(());
+        }
+
         let video_name = self
             .get_video()?
             .get_basic_info()
