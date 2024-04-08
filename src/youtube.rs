@@ -1,3 +1,4 @@
+use self::initial_data::VideoData;
 use crate::header::HeaderMapBuilder;
 use crate::prelude::{DownloadError, Downloader};
 use crate::youtube::initial_data::PlaylistVideoRenderer;
@@ -7,7 +8,6 @@ use rusty_ytdl::{VideoOptions, VideoQuality, VideoSearchOptions};
 use scraper::{Html, Selector};
 use serde_json::Value;
 use std::path::Path;
-use self::initial_data::VideoData;
 
 mod initial_data;
 
@@ -164,11 +164,11 @@ impl YoutubeDownloader {
         Ok(Playlist { name, videos })
     }
 
-    async fn get_video_title(&self) -> Result<String, DownloadError> {
+    async fn get_video_title(url: &str) -> Result<String, DownloadError> {
         let client = Client::new();
 
         let response = client
-            .get(self.url.as_str())
+            .get(url)
             .headers(HeaderMapBuilder::new().with_user_agent().build())
             .send()
             .await?
@@ -385,10 +385,7 @@ impl YoutubeDownloader {
 
                 let title = match video_data.get_title() {
                     Ok(title) => title,
-                    Err(_) => {
-                        let video_info = video.get_basic_info().await?;
-                        video_info.video_details.title
-                    }
+                    Err(_) => Self::get_video_title(video.get_video_url().as_str()).await?,
                 };
 
                 let download_result = self.download_video_to_path(video, path.join(&title)).await;
@@ -446,7 +443,7 @@ impl Downloader for YoutubeDownloader {
         }
 
         let video = self.get_video()?;
-        let title = self.get_video_title().await?;
+        let title = Self::get_video_title(self.url.as_str()).await?;
 
         self.download_video_to_path(video, Path::new("./").join(&title))
             .await
