@@ -1,13 +1,13 @@
 use crate::header::HeaderMapBuilder;
 use crate::prelude::{DownloadError, Downloader};
+use crate::youtube::initial_data::PlaylistVideoRenderer;
 use reqwest::{Client, Url};
 use rusty_ytdl::{FFmpegArgs, Video};
 use rusty_ytdl::{VideoOptions, VideoQuality, VideoSearchOptions};
 use scraper::{Html, Selector};
+use serde_json::Value;
 use std::path::Path;
-use tokio::time::Instant;
-
-use self::initial_data::{InitialData, VideoData};
+use self::initial_data::VideoData;
 
 mod initial_data;
 
@@ -164,6 +164,48 @@ impl YoutubeDownloader {
         Ok(Playlist { name, videos })
     }
 
+    async fn get_video_title(&self) -> Result<String, DownloadError> {
+        let client = Client::new();
+
+        let response = client
+            .get(self.url.as_str())
+            .headers(HeaderMapBuilder::new().with_user_agent().build())
+            .send()
+            .await?
+            .text()
+            .await?;
+
+        let document = Html::parse_document(&response);
+        let scripts_selector = Selector::parse("title").unwrap();
+        let title = document
+            .select(&scripts_selector)
+            .next()
+            .unwrap()
+            .inner_html();
+
+        Ok(title)
+    }
+
+    fn object_value_from_response(response: &str) -> Result<Value, DownloadError> {
+        let document = Html::parse_document(response);
+        let scripts_selector = Selector::parse("script").unwrap();
+
+        let string_object = document
+            .select(&scripts_selector)
+            .filter(|x| x.inner_html().contains("var ytInitialData ="))
+            .map(|x| x.inner_html().replace("var ytInitialData =", ""))
+            .next()
+            .unwrap_or(String::from(""))
+            .trim()
+            .trim_end_matches(';')
+            .to_string();
+
+        let parsed_value: Value = serde_json::from_str(&string_object)
+            .map_err(|_| DownloadError::YoutubeError(format!("Failed to scrape playlist data.")))?;
+
+        Ok(parsed_value)
+    }
+
     /// Scrapes video data from the HTML response.
     ///
     /// This function takes a string `response`, representing the HTML content of a YouTube playlist page,
@@ -187,25 +229,22 @@ impl YoutubeDownloader {
         &self,
         response: String,
     ) -> Result<(String, Vec<VideoData>), DownloadError> {
-        let document = Html::parse_document(&response);
-        let scripts_selector = Selector::parse("script").unwrap();
+        let parsed_value: Value = Self::object_value_from_response(&response)?;
 
-        let string_object = document
-            .select(&scripts_selector)
-            .filter(|x| x.inner_html().contains("var ytInitialData ="))
-            .map(|x| x.inner_html().replace("var ytInitialData =", ""))
-            .next()
-            .unwrap_or(String::from(""))
-            .trim()
-            .trim_end_matches(';')
-            .to_string();
+        let videos_value = &parsed_value["contents"]["twoColumnBrowseResultsRenderer"]["tabs"][0]
+            ["tabRenderer"]["content"]["sectionListRenderer"]["contents"][0]["itemSectionRenderer"]
+            ["contents"][0]["playlistVideoListRenderer"]["contents"];
 
-        let data: InitialData = serde_json::from_str(&string_object)
-            .map_err(|_| DownloadError::YoutubeError(format!("Failed to scrape playlist data.")))?;
-        let playlist_name = data.get_playlist_name();
-        let videos_data = data.videos_data();
+        let videos_renderer: Vec<PlaylistVideoRenderer> =
+            serde_json::from_value(videos_value.to_owned()).unwrap_or_else(|_| Vec::new());
 
-        println!("{}", videos_data.len());
+        let videos_data: Vec<VideoData> = videos_renderer
+            .into_iter()
+            .filter_map(PlaylistVideoRenderer::filter_videos_data)
+            .collect();
+
+        let playlist_name_value = &parsed_value["metadata"]["playlistMetadataRenderer"]["title"];
+        let playlist_name: String = serde_json::from_value(playlist_name_value.to_owned()).unwrap();
 
         Ok((playlist_name, videos_data))
     }
@@ -406,14 +445,10 @@ impl Downloader for YoutubeDownloader {
             return Ok(());
         }
 
-        let start = Instant::now();
         let video = self.get_video()?;
-        println!("elapsed 1: {} seconds", start.elapsed().as_secs_f64());
+        let title = self.get_video_title().await?;
 
-        let name = video.get_basic_info().await?.video_details.title;
-        println!("elapsed 2: {} seconds", start.elapsed().as_secs_f64());
-
-        self.download_video_to_path(video, Path::new("./").join(&name))
+        self.download_video_to_path(video, Path::new("./").join(&title))
             .await
     }
 
