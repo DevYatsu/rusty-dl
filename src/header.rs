@@ -109,10 +109,14 @@ impl HeaderMapBuilder {
     }
 }
 
+/// An enum representing various types of values that can be used in constructing HTTP headers.
 #[derive(Debug, Clone)]
 pub enum HeaderBuilderValue {
+    /// A static string slice value.
     Static(&'static str),
+    /// A value of type [`HeaderValue`].
     Value(HeaderValue),
+    /// A value of type [`HeaderName`].
     Name(HeaderName),
 }
 

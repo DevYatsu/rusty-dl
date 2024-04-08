@@ -3,6 +3,7 @@ use std::path::Path;
 use crate::header::HeaderMapBuilder;
 use crate::prelude::{DownloadError, Downloader};
 use reqwest::{Client, Response};
+use tokio::fs::create_dir_all;
 use tokio::{fs::File, io::AsyncWriteExt};
 use url::Url;
 
@@ -56,14 +57,11 @@ impl Downloader for ResourceDownloader {
         file_path: P,
     ) -> Result<(), DownloadError> {
         let path = file_path.as_ref();
-        if path.is_dir() {
-            return Err(DownloadError::Downloader(format!(
-                "Path must point to a file. That is not the case for `{}`",
-                path.display()
-            )));
+
+        if let Some(parent) = path.parent() {
+            create_dir_all(parent).await?
         }
 
-        tokio::fs::create_dir_all(path).await?;
         let mut file = File::create(path).await?;
 
         let response = self.send_request().await?;
@@ -79,6 +77,7 @@ impl Downloader for ResourceDownloader {
             .path_segments()
             .and_then(|segments| segments.last())
             .unwrap_or_else(|| self.url.as_str());
+
         self.download_to(Path::new("./").join(name)).await
     }
 

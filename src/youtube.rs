@@ -25,11 +25,11 @@ pub struct YoutubeDownloader {
 impl YoutubeDownloader {
     /// Creates a new instance of the [`YoutubeDownloader`] with the provided YouTube video link.
     ///
-    /// ### Arguments
+    /// ## Arguments
     ///
     /// * `link` - The YouTube video/playlist link to download.
     ///
-    /// ### Returns
+    /// ## Returns
     ///
     /// Returns a [`Result`] containing the [`YoutubeDownloader`] instance on success, or a [`DownloadError`] if parsing the URL fails or if the URL is invalid.
     pub fn new(link: &str) -> Result<Self, DownloadError> {
@@ -69,15 +69,15 @@ impl YoutubeDownloader {
     /// This method returns a [`Result`] containing a [`Video`] instance, which represents the video and allows accessing its
     /// **metadata** and downloading it.
     ///
-    /// ### Returns
+    /// ## Returns
     ///
     /// Returns a [`Result`] containing a [`Video`] instance on success, or a [`DownloadError`] if the video is not found.
     ///
-    /// ### Errors
+    /// ## Errors
     ///
     /// Returns a [`DownloadError`] if the video is not found.
     ///
-    /// ### Examples
+    /// ## Examples
     ///
     /// ```no_run
     /// use rusty_dl::prelude::{YoutubeDownloader, DownloadError};
@@ -111,15 +111,15 @@ impl YoutubeDownloader {
     /// This method returns a [`Result`] containing a [`Video`] instance, which represents the video and allows accessing its
     /// **metadata** and downloading it.
     ///
-    /// ### Arguments
+    /// ## Arguments
     ///
     /// * `url_or_id` - A string slice containing the URL or ID of the video.
     ///
-    /// ### Returns
+    /// ## Returns
     ///
     /// Returns a [`Result`] containing a [`Video`] instance on success, or a [`DownloadError`] if the video is not found.
     ///
-    /// ### Errors
+    /// ## Errors
     ///
     /// Returns a [`DownloadError`] if the video is not found.
     fn get_video_with_url_or_id(&self, url_or_id: &str) -> Result<Video, DownloadError> {
@@ -144,7 +144,7 @@ impl YoutubeDownloader {
     /// It extracts the name of the playlist and a list of video data by scraping the response HTML.
     /// Finally, it constructs and returns a [`Playlist`] instance containing the playlist name and video data.
     ///
-    /// ### Errors
+    /// ## Errors
     ///
     /// Returns a [`DownloadError`] if any error occurs during the retrieval process, such as failure to send HTTP requests,
     /// receiving unexpected responses, or parsing HTML content.
@@ -171,15 +171,15 @@ impl YoutubeDownloader {
     /// The function extracts the JSON object from the JavaScript variable and deserializes it into an [`InitialData`] struct.
     /// Finally, it retrieves the playlist name and video data from the deserialized object and returns them as a tuple.
     ///
-    /// ### Arguments
+    /// ## Arguments
     ///
     /// * `response` - A string containing the HTML content of a YouTube playlist page.
     ///
-    /// ### Returns
+    /// ## Returns
     ///
     /// Returns a tuple containing the name of the playlist and a vector of video data.
     ///
-    /// ### Errors
+    /// ## Errors
     ///
     /// Returns a [`DownloadError`] if any error occurs during the process of parsing HTML content.
     fn scrape_videos_data(
@@ -215,7 +215,7 @@ impl YoutubeDownloader {
 
     /// Sets a custom name for the downloaded video.
     ///
-    /// ### Arguments
+    /// ## Arguments
     ///
     /// * `new_name` - The new name for the downloaded video.
     pub fn set_name(&mut self, new_name: String) -> &mut Self {
@@ -257,12 +257,12 @@ impl YoutubeDownloader {
     /// video file based on the provided path and optional video name set in the [`YoutubeDownloader`] instance. If the `add_underscores_in_name`
     /// flag is set to true, spaces in the video title are replaced with underscores.
     ///
-    /// ### Arguments
+    /// ## Arguments
     ///
     /// * `video` - The `[Video`] instance representing the video to be downloaded.
-    /// * `path` - The path to the folder where the video will be downloaded.
+    /// * `path` - The path of the file the video must be piped into.
     ///
-    /// ### Errors
+    /// ## Errors
     ///
     /// Returns a [`DownloadError`] if any error occurs during the download process, such as failure to create directories,
     /// fetching video information, or downloading the video file.
@@ -271,42 +271,29 @@ impl YoutubeDownloader {
         video: Video,
         path: P,
     ) -> Result<(), DownloadError> {
-        let video_info = video.get_basic_info().await?;
+        let mut file_path = path.as_ref().to_owned();
 
-        let base_path = path.as_ref();
-
-        let mut video_name = self
-            .video_name
-            .to_owned()
-            .unwrap_or(video_info.video_details.title);
-
-        if self.add_underscores_in_name {
-            video_name = video_name.replace(" ", "_");
-        }
-
-        let mut video_path = base_path.join(video_name);
-
-        if let Some(parent) = video_path.parent() {
+        if let Some(parent) = file_path.parent() {
             tokio::fs::create_dir_all(parent).await?
         }
 
         match &self.filter {
             VideoSearchOptions::VideoAudio => {
-                video_path.set_extension("mp4");
-                video.download(video_path).await?
+                file_path = file_path.with_extension("mp4");
+                video.download(file_path).await?
             }
             VideoSearchOptions::Video => {
-                video_path.set_extension("mp4");
-                video.download(video_path).await?
+                file_path = file_path.with_extension("mp4");
+                video.download(file_path).await?
             }
             VideoSearchOptions::Audio => {
-                video_path.set_extension("mp3");
+                file_path = file_path.with_extension("mp3");
 
                 // `ffmpeg` must be installed on the computer to download a mp3 file
 
                 match video
                     .download_with_ffmpeg(
-                        video_path.to_owned(),
+                        file_path.to_owned(),
                         Some(FFmpegArgs {
                             format: Some("mp3".to_string()),
                             audio_filter: None,
@@ -318,43 +305,44 @@ impl YoutubeDownloader {
                     Ok(v) => v,
                     Err(_) => {
                         // If download with ffmpeg fails, try downloading without ffmpeg
-                        video_path.set_extension("webm");
-                        video.download(video_path).await?
+                        file_path.with_extension("webm");
+                        video.download(file_path).await?
                     }
                 }
             }
-            VideoSearchOptions::Custom(_) => video.download(video_path).await?,
+            VideoSearchOptions::Custom(_) => video.download(file_path).await?,
         }
 
         Ok(())
     }
 
-    /// Downloads all videos from a playlist to the specified path.
+    /// Downloads all videos from a playlist to the specified folder.
     ///
     /// **This function is not meant to be used  directly by users. Instead it should be called through one of the other functions in this struct.**
     ///
     /// This function asynchronously downloads all videos from a YouTube playlist to the provided folder path.
     ///
-    /// ### Arguments
+    /// ## Arguments
     ///
     /// * `path` - The path to the folder where the videos will be downloaded.
     ///
-    /// ### Errors
+    /// ## Errors
     ///
     /// Returns a `DownloadError` if any error occurs during the download process, such as failure to create directories,
     /// fetching playlist information, or downloading the videos.
     async fn download_playlist_to(&self, path: &Path) -> Result<(), DownloadError> {
         let playlist = self.get_playlist().await?;
-        let joined_path = &path.join(&playlist.name.replace("/", "_"));
 
-        // create the directory of the playlist
-        tokio::fs::create_dir_all(&joined_path).await?;
+        if let Some(parent) = path.parent() {
+            // create the directory of the playlist
+            tokio::fs::create_dir_all(parent).await?;
+        }
 
         let results =
             futures::future::join_all(playlist.videos.into_iter().map(|video_data| async move {
                 let video = self.get_video_with_url_or_id(&video_data.video_id)?;
                 let title = video.get_basic_info().await?.video_details.title;
-                let download_result = self.download_video_to_path(video, &joined_path).await;
+                let download_result = self.download_video_to_path(video, &path).await;
 
                 if let Err(err) = &download_result {
                     eprintln!("Error downloading video named `{}`: {:?}", title, err);
@@ -387,12 +375,6 @@ impl Downloader for YoutubeDownloader {
         folder_path: P,
     ) -> Result<(), DownloadError> {
         let path = folder_path.as_ref();
-        if path.is_file() {
-            return Err(DownloadError::Downloader(format!(
-                "Path must point to a directory. That is not the case for `{}`",
-                path.display()
-            )));
-        }
 
         if self.is_playlist {
             self.download_playlist_to(path).await?;
@@ -404,6 +386,18 @@ impl Downloader for YoutubeDownloader {
         self.download_video_to_path(video, path).await?;
 
         Ok(())
+    }
+
+    async fn download(&self) -> Result<(), DownloadError> {
+        let video_name = self
+            .get_video()?
+            .get_basic_info()
+            .await?
+            .video_details
+            .title;
+
+        self.download_to(Path::new("./").join(video_name).with_extension("mp4"))
+            .await
     }
 
     fn is_valid_url(url: &Url) -> bool {

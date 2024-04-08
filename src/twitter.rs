@@ -77,15 +77,15 @@ struct GuestTokenResponse {
 impl TwitterDownloader {
     /// Creates a new instance of [`TwitterDownloader`] with the provided Twitter tweet link.
     ///
-    /// ### Arguments
+    /// ## Arguments
     ///
     /// * `link` - The Twitter tweet link to download.
     ///
-    /// ### Returns
+    /// ## Returns
     ///
     /// Returns a [`Result`] containing the [`TwitterDownloader`] instance on success, or a [`DownloadError`] if parsing the URL fails or if the URL is invalid.
     ///
-    /// ### Examples
+    /// ## Examples
     ///
     /// ```
     /// use rusty_dl::prelude::TwitterDownloader;
@@ -130,15 +130,15 @@ impl TwitterDownloader {
 
     /// Define a callback function to generate file names from.
     ///
-    /// ### Arguments
+    /// ## Arguments
     ///
     /// * `callback` - A function that takes a [`TwitterMedia`] instance and returns a [`String`].
     ///
-    /// ### Returns
+    /// ## Returns
     ///
     /// Returns a mutable reference to the modified [`TwitterDownloader`]
     ///
-    /// ### Examples
+    /// ## Examples
     ///
     /// ```
     /// use rusty_dl::prelude::TwitterDownloader;
@@ -162,7 +162,7 @@ impl TwitterDownloader {
     ///
     /// This method asynchronously fetches and returns the media entities (such as videos and images) associated with the Twitter tweet.
     ///
-    /// ### Returns
+    /// ## Returns
     ///
     /// Returns a [`Result`] containing a vector of [`MediaEntity]` instances on success, or a [`DownloadError`] if the retrieval fails.
     async fn get_tweet_medias(&self) -> Result<Vec<MediaEntity>, DownloadError> {
@@ -418,29 +418,30 @@ impl TwitterDownloader {
 
     /// Downloads the Twitter tweet media and saves it to the specified folder with the tweet ID as the file name.
     ///
-    /// ### Arguments
+    /// ## Arguments
     ///
     /// * `path` - The path to the folder where the media will be downloaded.
     ///
-    /// ### Returns
+    /// ## Returns
     ///
     /// Returns a [`Result`] indicating success or failure of the download operation.
-    pub async fn download_as_tweets_folder_to(
+    pub async fn download_as_tweets_folder_to<P: AsRef<std::path::Path> + Send>(
         &self,
-        path: &std::path::Path,
+        path: P,
     ) -> Result<(), DownloadError> {
-        let path_buf = path.join(self.tweet_id());
+        let folder_path = path.as_ref();
+        let path_buf = folder_path.join(self.tweet_id());
 
-        self.download_to(&path_buf).await
+        self.download_to(path_buf).await
     }
 
     /// Blocks the current thread until the Twitter tweet media is downloaded and saved to the specified folder with the tweet ID as the file name.
     ///
-    /// ### Arguments
+    /// ## Arguments
     ///
     /// * `path` - The path to the folder where the media will be downloaded.
     ///
-    /// ### Returns
+    /// ## Returns
     ///
     /// Returns a [`Result`] indicating success or failure of the download operation.
     pub fn blocking_download_as_tweets_folder_to(
@@ -455,17 +456,40 @@ impl TwitterDownloader {
 }
 
 impl Downloader for TwitterDownloader {
+    fn is_valid_url(url: &Url) -> bool {
+        url.domain() == Some("twitter.com")
+            || url.domain() == Some("x.com")
+            || url.domain() == Some("www.twitter.com")
+            || url.domain() == Some("www.x.com")
+    }
+    /// Downloads and saves the twitter medias at the specified folder path.
+    ///
+    /// ## Arguments
+    ///
+    /// * `path` - The path to the folder where the resources will be downloaded.
+    ///
+    /// ## Returns
+    ///
+    /// Returns a future representing the download operation, which resolves to a [`Result`] indicating success or failure.
+    ///
+    /// ## Examples
+    ///
+    /// ```
+    /// use rusty_dl::prelude::{DownloadError, Downloader, TwitterDownloader};
+    ///
+    /// #[tokio::main]
+    /// async fn main() -> Result<(), DownloadError> {
+    ///     let downloader = TwitterDownloader::new("https://x.com/SpaceX/status/1776826998360613348").unwrap();
+    ///     let result = downloader.download_to("./twitter_medias/").await?;
+    ///
+    ///     Ok(())
+    /// }
+    /// ```
     async fn download_to<P: AsRef<Path> + std::marker::Send>(
         &self,
         folder_path: P,
     ) -> Result<(), DownloadError> {
         let path = folder_path.as_ref();
-        if path.is_file() {
-            return Err(DownloadError::Downloader(format!(
-                "Path must point to a directory. That is not the case for `{}`",
-                path.display()
-            )));
-        }
         let medias = self.get_tweet_medias().await?;
 
         let media_infos = medias
@@ -504,15 +528,86 @@ impl Downloader for TwitterDownloader {
         Ok(())
     }
 
+    /// Downloads and saves the twitter file(s) to the current working directory.
+    ///
+    /// ## Returns
+    ///
+    /// Returns a future representing the download operation, which resolves to a [`Result`] indicating success or failure.
+    ///
+    /// ## Examples
+    ///
+    /// ```
+    /// use rusty_dl::prelude::{DownloadError, Downloader, TwitterDownloader};
+    ///
+    /// #[tokio::main]
+    /// async fn main() -> Result<(), DownloadError> {
+    ///     let downloader = TwitterDownloader::new("https://x.com/elonmusk/status/1776736700468990168").unwrap();
+    ///     let result = downloader.download().await?;
+    ///
+    ///     Ok(())
+    /// }
+    /// ```
     async fn download(&self) -> Result<(), DownloadError> {
         self.download_to("./").await
     }
 
-    fn is_valid_url(url: &Url) -> bool {
-        url.domain() == Some("twitter.com")
-            || url.domain() == Some("x.com")
-            || url.domain() == Some("www.twitter.com")
-            || url.domain() == Some("www.x.com")
+    /// Blocks the current thread until the download completes, using asynchronous execution.
+    ///
+    /// The tweeter files are saved to the default location (`./`).
+    ///
+    /// ## Returns
+    ///
+    /// Returns a [`Result`] indicating success or failure of the download operation.
+    ///
+    /// ## Examples
+    ///
+    /// ```
+    /// use rusty_dl::prelude::{DownloadError, Downloader, TwitterDownloader};
+    ///
+    /// fn main() -> Result<(), DownloadError> {
+    ///     let downloader = TwitterDownloader::new("https://x.com/SpaceX/status/1776412789768425751").unwrap();
+    ///     downloader.blocking_download()?;
+    ///
+    ///     Ok(())
+    /// }
+    /// ```
+    fn blocking_download(&self) -> Result<(), DownloadError>
+    where
+        Self: Sync,
+    {
+        Self::blocking(async { self.download().await })
+    }
+
+    /// Blocks the current thread until the download completes, using asynchronous execution, and saves the file at the specified path.
+    ///
+    /// ## Arguments
+    ///
+    /// * `path` - The path to the folder where the twitter files will be downloaded.
+    ///
+    /// ## Returns
+    ///
+    /// Returns a `Result` indicating success or failure of the download operation.
+    ///
+    /// ## Example
+    ///
+    /// ```
+    /// use rusty_dl::prelude::{DownloadError, Downloader, TwitterDownloader};
+    ///
+    /// fn main() -> Result<(), DownloadError> {
+    ///     let downloader = TwitterDownloader::new("https://x.com/SpaceX/status/1776412650836251053").unwrap();
+    ///     downloader.blocking_download_to("./twitter_downloads/")?;
+    ///
+    ///     Ok(())
+    /// }
+    /// ```
+    fn blocking_download_to<P: AsRef<Path> + std::marker::Send>(
+        &self,
+        path: P,
+    ) -> Result<(), DownloadError>
+    where
+        Self: Sync,
+    {
+        Self::blocking(async { self.download_to(path).await })
     }
 }
 

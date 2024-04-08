@@ -23,7 +23,13 @@ async fn twitter() -> Result<(), DownloadError> {
 
     println!("it took {} seconds!", start.elapsed().as_secs_f64());
 
-    rusty_dl::test::assert_folder_len("./tweets/", 10)?;
+    assert_folder_len("./tweets/", 10)?;
+
+    Ok(())
+}
+
+fn assert_folder_len(name: &str, len: usize) -> Result<(), std::io::Error> {
+    assert_eq!(std::fs::read_dir(std::path::Path::new(name))?.count(), len);
 
     Ok(())
 }

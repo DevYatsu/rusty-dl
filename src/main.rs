@@ -18,8 +18,7 @@ async fn main() -> Result<(), DownloadError> {
 
             downloader
                 .set_name_callback(names_callback)
-                .only_images()
-                .download_to("./twitter-media/")
+                .download()
                 .await?;
         }
         link if YoutubeDownloader::is_valid_url(&url) => {
