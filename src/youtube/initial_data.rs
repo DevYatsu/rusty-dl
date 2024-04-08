@@ -1,3 +1,5 @@
+use crate::prelude::DownloadError;
+
 /// Represents the initial data retrieved from a
 /// **Playlist**
 /// Youtube Page.
@@ -218,21 +220,22 @@ pub struct VideoData {
 impl VideoData {
     // TO RETRIEVE THE VIDEO TITLE:
     // video.get_basic_info().await?.video_details.title
-    // is the most surefire way
+    // is the most surefire way but the issue is it's sending a request and it takes too much time
 
-    // pub fn title(&self) -> Result<String, DownloadError> {
-    //     Ok(self
-    //         .title
-    //         .runs
-    //         .get(0)
-    //         .ok_or_else(|| {
-    //             DownloadError::YoutubeError(format!(
-    //                 "Could not retrieve title of video with id `{}`",
-    //                 self.video_id
-    //             ))
-    //         })?
-    //         .text.to_owned())
-    // }
+    pub fn get_title(&self) -> Result<String, DownloadError> {
+        Ok(self
+            .title
+            .runs
+            .get(0)
+            .ok_or_else(|| {
+                DownloadError::YoutubeError(format!(
+                    "Could not retrieve title of video with id `{}`",
+                    self.video_id
+                ))
+            })?
+            .text
+            .to_owned())
+    }
 }
 
 #[derive(Debug, serde::Deserialize, serde::Serialize, Clone)]

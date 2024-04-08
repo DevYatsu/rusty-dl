@@ -455,6 +455,7 @@ impl TwitterDownloader {
     }
 }
 
+#[async_trait::async_trait]
 impl Downloader for TwitterDownloader {
     fn is_valid_url(url: &Url) -> bool {
         url.domain() == Some("twitter.com")

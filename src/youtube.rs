@@ -5,6 +5,7 @@ use rusty_ytdl::{FFmpegArgs, Video};
 use rusty_ytdl::{VideoOptions, VideoQuality, VideoSearchOptions};
 use scraper::{Html, Selector};
 use std::path::Path;
+use tokio::time::Instant;
 
 use self::initial_data::{InitialData, VideoData};
 
@@ -100,7 +101,7 @@ impl YoutubeDownloader {
             ..Default::default()
         };
 
-        let video = rusty_ytdl::Video::new_with_options(self.url.clone(), video_options)
+        let video = rusty_ytdl::Video::new_with_options(self.url.as_str(), video_options)
             .map_err(|_| DownloadError::VideoNotFound("Video Not Found".to_owned()))?;
 
         Ok(video)
@@ -203,6 +204,8 @@ impl YoutubeDownloader {
             .map_err(|_| DownloadError::YoutubeError(format!("Failed to scrape playlist data.")))?;
         let playlist_name = data.get_playlist_name();
         let videos_data = data.videos_data();
+
+        println!("{}", videos_data.len());
 
         Ok((playlist_name, videos_data))
     }
@@ -334,19 +337,22 @@ impl YoutubeDownloader {
         &self,
         folder_path: P,
     ) -> Result<(), DownloadError> {
-        let path = folder_path.as_ref();
         let playlist = self.get_playlist().await?;
-
-        if let Some(parent) = path.parent() {
-            // create the directory of the playlist
-            tokio::fs::create_dir_all(parent).await?;
-        }
+        let path = &folder_path.as_ref().join(playlist.name);
 
         let results =
             futures::future::join_all(playlist.videos.into_iter().map(|video_data| async move {
                 let video = self.get_video_with_url_or_id(&video_data.video_id)?;
-                let title = video.get_basic_info().await?.video_details.title;
-                let download_result = self.download_video_to_path(video, &path).await;
+
+                let title = match video_data.get_title() {
+                    Ok(title) => title,
+                    Err(_) => {
+                        let video_info = video.get_basic_info().await?;
+                        video_info.video_details.title
+                    }
+                };
+
+                let download_result = self.download_video_to_path(video, path.join(&title)).await;
 
                 if let Err(err) = &download_result {
                     eprintln!("Error downloading video named `{}`: {:?}", title, err);
@@ -373,6 +379,7 @@ pub struct Playlist {
     pub videos: Vec<VideoData>,
 }
 
+#[async_trait::async_trait]
 impl Downloader for YoutubeDownloader {
     async fn download_to<P: AsRef<Path> + std::marker::Send>(
         &self,
@@ -399,14 +406,14 @@ impl Downloader for YoutubeDownloader {
             return Ok(());
         }
 
-        let video_name = self
-            .get_video()?
-            .get_basic_info()
-            .await?
-            .video_details
-            .title;
+        let start = Instant::now();
+        let video = self.get_video()?;
+        println!("elapsed 1: {} seconds", start.elapsed().as_secs_f64());
 
-        self.download_to(Path::new("./").join(video_name).with_extension("mp4"))
+        let name = video.get_basic_info().await?.video_details.title;
+        println!("elapsed 2: {} seconds", start.elapsed().as_secs_f64());
+
+        self.download_video_to_path(video, Path::new("./").join(&name))
             .await
     }
 

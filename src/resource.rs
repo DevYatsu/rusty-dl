@@ -51,6 +51,7 @@ impl ResourceDownloader {
     }
 }
 
+#[async_trait::async_trait]
 impl Downloader for ResourceDownloader {
     async fn download_to<P: AsRef<Path> + std::marker::Send>(
         &self,

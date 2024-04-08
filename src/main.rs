@@ -22,8 +22,8 @@ async fn main() -> Result<(), DownloadError> {
                 .await?;
         }
         link if YoutubeDownloader::is_valid_url(&url) => {
-            let mut downloader = YoutubeDownloader::new(link.as_str())?;
-            downloader.only_audio().download().await?;
+            let downloader = YoutubeDownloader::new(link.as_str())?;
+            downloader.download().await?;
         }
         _ => {
             let downloader = ResourceDownloader::new(link.as_str())?;

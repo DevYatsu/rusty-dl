@@ -2060,6 +2060,7 @@ checksum = "ecd36cc4259e3e4514335c4a138c6b43171a8d61d8f5c9348f9fc7529416f247"
 name = "rusty_dl"
 version = "0.2.1"
 dependencies = [
+ "async-trait",
  "futures",
  "percent-encoding",
  "regex",

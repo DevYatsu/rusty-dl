@@ -14,6 +14,7 @@ use std::{future::Future, path::Path};
 use url::Url;
 
 /// A trait representing a downloader.
+#[async_trait::async_trait]
 pub trait Downloader {
     /// Parses the provided URL string into a [`Url`] struct.
     ///
@@ -61,11 +62,8 @@ pub trait Downloader {
     ///     Ok(())
     /// }
     /// ```
-    fn download(&self) -> impl std::future::Future<Output = Result<(), DownloadError>> + Send
-    where
-        Self: Sync,
-    {
-        self.download_to("./")
+    async fn download(&self) -> Result<(), DownloadError> {
+        self.download_to("./").await
     }
 
     /// Downloads and saves the file at the specified path.
@@ -91,12 +89,10 @@ pub trait Downloader {
     ///     Ok(())
     /// }
     /// ```
-    fn download_to<P: AsRef<Path> + std::marker::Send>(
+    async fn download_to<P: AsRef<Path> + std::marker::Send>(
         &self,
         path: P,
-    ) -> impl std::future::Future<Output = Result<(), DownloadError>> + Send
-    where
-        Self: Sync;
+    ) -> Result<(), DownloadError>;
 
     /// Blocks the current thread until the download completes, using asynchronous execution.
     ///

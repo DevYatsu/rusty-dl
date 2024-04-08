@@ -11,6 +11,7 @@ repository = "https://github.com/DevYatsu/rusty-dl"
 categories = ["internet", "media", "utilities"]
 
 [dependencies]
+async-trait = "0.1.79"
 futures = {version = "0.3.30"}
 percent-encoding = {version = "2.3.1"}
 regex = {version = "1.10.4"}
