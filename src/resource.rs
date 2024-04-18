@@ -11,6 +11,7 @@ use url::Url;
 /// The [`ResourceDownloader`] is designed for downloading resources directly from the internet, such as files hosted on a website.
 pub struct ResourceDownloader {
     url: Url,
+    name: Option<String>,
 }
 
 impl ResourceDownloader {
@@ -33,7 +34,14 @@ impl ResourceDownloader {
             ));
         }
 
-        Ok(Self { url })
+        Ok(Self { url, name: None })
+    }
+
+    /// Sets the output filename for downloaded resources. If not set, the filename will be derived from the last part of the link path.
+    ///
+    /// **ONLY WORKS WITH `download` method, not `download_to`**
+    pub fn with_name(&mut self, name: String) {
+        self.name = Some(name);
     }
 
     /// Sends a GET request to the URL of the resource and returns the response.
@@ -73,11 +81,14 @@ impl Downloader for ResourceDownloader {
     }
 
     async fn download(&self) -> Result<(), DownloadError> {
-        let name = self
-            .url
-            .path_segments()
-            .and_then(|segments| segments.last())
-            .unwrap_or_else(|| self.url.as_str());
+        let name = match &self.name {
+            Some(name) => name,
+            None => self
+                .url
+                .path_segments()
+                .and_then(|segments| segments.last())
+                .unwrap_or_else(|| self.url.as_str()),
+        };
 
         self.download_to(Path::new("./").join(name)).await
     }

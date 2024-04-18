@@ -3,13 +3,15 @@ use crate::header::HeaderMapBuilder;
 use crate::prelude::{DownloadError, Downloader};
 use crate::youtube::initial_data::PlaylistVideoRenderer;
 use reqwest::{Client, Url};
-use rusty_ytdl::{FFmpegArgs, Video};
-use rusty_ytdl::{VideoOptions, VideoQuality, VideoSearchOptions};
+use rusty_ytdl::FFmpegArgs;
+use rusty_ytdl::{VideoOptions, VideoQuality};
 use scraper::{Html, Selector};
 use serde_json::Value;
 use std::path::Path;
 
 mod initial_data;
+
+pub use rusty_ytdl::{Video, VideoDetails, VideoInfo, VideoSearchOptions};
 
 #[derive(Debug, Clone)]
 /// Implementation of a YouTube downloader.

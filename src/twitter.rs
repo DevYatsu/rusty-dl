@@ -329,7 +329,7 @@ impl TwitterDownloader {
     }
 
     /// Asynchronously retrieves the bearer and guest tokens required for retrieving the tweet data next.
-    pub async fn get_tokens(&self) -> Result<(String, String), DownloadError> {
+    async fn get_tokens(&self) -> Result<(String, String), DownloadError> {
         let mainjs_url = self.get_mainjs_url().await?;
         let bearer_token = self.get_bearer_token(&mainjs_url).await?;
         let guest_token = self.get_guest_token(&bearer_token).await?;
