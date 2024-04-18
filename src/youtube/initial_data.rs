@@ -51,27 +51,27 @@ pub struct PlaylistMetadataRenderer {
     pub ios_appindexing_link: String,
 }
 
-impl InitialData {
-    /// Retrieve the data on videos in the playlist
-    pub fn videos_data(self) -> Vec<VideoData> {
-        self.contents.two_column_browse_results_renderer.tabs[0]
-            .to_owned()
-            .tab_renderer
-            .content
-            .section_list_renderer
-            .contents
-            .0
-            .item_section_renderer
-            .contents[0]
-            .to_owned()
-            .playlist_video_list_renderer
-            .get_videos()
-    }
+// impl InitialData {
+//     /// Retrieve the data on videos in the playlist
+//     pub fn videos_data(self) -> Vec<VideoData> {
+//         self.contents.two_column_browse_results_renderer.tabs[0]
+//             .to_owned()
+//             .tab_renderer
+//             .content
+//             .section_list_renderer
+//             .contents
+//             .0
+//             .item_section_renderer
+//             .contents[0]
+//             .to_owned()
+//             .playlist_video_list_renderer
+//             .get_videos()
+//     }
 
-    pub fn get_playlist_name(&self) -> String {
-        self.metadata.playlist_metadata_render.title.to_owned()
-    }
-}
+//     pub fn get_playlist_name(&self) -> String {
+//         self.metadata.playlist_metadata_render.title.to_owned()
+//     }
+// }
 
 #[derive(Debug, serde::Deserialize, serde::Serialize, Clone)]
 pub struct Content {
@@ -165,14 +165,14 @@ pub struct PlaylistVideoListRenderer {
     pub playlist_id: String,
 }
 
-impl PlaylistVideoListRenderer {
-    pub fn get_videos(self) -> Vec<VideoData> {
-        self.contents
-            .into_iter()
-            .filter_map(PlaylistVideoRenderer::filter_videos_data)
-            .collect()
-    }
-}
+// impl PlaylistVideoListRenderer {
+//     pub fn get_videos(self) -> Vec<VideoData> {
+//         self.contents
+//             .into_iter()
+//             .filter_map(PlaylistVideoRenderer::filter_videos_data)
+//             .collect()
+//     }
+// }
 
 #[derive(Debug, serde::Deserialize, serde::Serialize, Clone)]
 pub enum PlaylistVideoRenderer {

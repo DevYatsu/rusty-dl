@@ -111,7 +111,7 @@ pub struct Error {
 }
 
 #[derive(Debug, serde::Deserialize)]
-struct Extension {
+pub struct Extension {
     pub name: String,
     pub source: String,
     pub code: u32,
@@ -120,7 +120,7 @@ struct Extension {
 }
 
 #[derive(Debug, serde::Deserialize)]
-struct Trace {
+pub struct Trace {
     pub trace_id: String,
 }
 

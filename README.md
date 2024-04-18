@@ -6,7 +6,7 @@ Rusty_dl Library is a versatile crate designed for effortlessly fetching a wide 
 
 - Download YouTube videos
 - Download tweet media (videos, images, gifs)
-- Download other media from the web
+- Download other media from the web (through url fetching)
 
 ## Todo
 
