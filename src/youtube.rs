@@ -245,9 +245,7 @@ impl YoutubeDownloader {
             ["contents"][0]["playlistVideoListRenderer"]["contents"];
 
         let videos_renderer: Vec<PlaylistVideoRenderer> =
-            serde_json::from_value(videos_value.to_owned()).unwrap();
-
-        println!("{:?}", videos_renderer);
+            serde_json::from_value(videos_value.to_owned()).unwrap_or(Vec::new());
 
         let videos_data: Vec<VideoData> = videos_renderer
             .into_iter()
@@ -401,7 +399,6 @@ impl YoutubeDownloader {
             Some(filter) => playlist.videos.into_iter().filter(filter).collect(),
             None => playlist.videos,
         };
-        println!("{:?}", filtered_videos);
 
         let results =
             futures::future::join_all(filtered_videos.into_iter().map(|video_data| async move {
@@ -412,7 +409,9 @@ impl YoutubeDownloader {
                     Err(_) => Self::get_video_title(video.get_video_url().as_str()).await?,
                 };
 
-                let download_result = self.download_video_to_path(video, path.join(&title)).await;
+                let download_result = self
+                    .download_video_to_path(video, path.join(&Self::sanitize_file_name(&title)))
+                    .await;
 
                 if let Err(err) = &download_result {
                     eprintln!("Error downloading video named `{}`: {:?}", title, err);
@@ -467,7 +466,7 @@ impl Downloader for YoutubeDownloader {
         }
 
         let video = self.get_video()?;
-        let title = Self::get_video_title(self.url.as_str()).await?;
+        let title = Self::sanitize_file_name(&Self::get_video_title(self.url.as_str()).await?);
 
         self.download_video_to_path(video, Path::new("./").join(&title))
             .await

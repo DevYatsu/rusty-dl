@@ -13,17 +13,16 @@ pub struct WebCommandMetadata {
     #[serde(rename = "rootVe")]
     pub root_ve: i32,
     #[serde(rename = "url")]
-    pub url: String,       
+    pub url: String,
     #[serde(rename = "webPageType")]
-    pub web_page_type: String,    
+    pub web_page_type: String,
 }
 
 #[derive(Debug, serde::Deserialize, Clone, serde::Serialize)]
 pub struct CommandMetadata {
     #[serde(rename = "webCommandMetadata")]
-    pub web_command_metadata: WebCommandMetadata
+    pub web_command_metadata: WebCommandMetadata,
 }
-
 
 #[derive(Debug, serde::Deserialize, Clone, serde::Serialize)]
 pub struct NavigationEndpoint {

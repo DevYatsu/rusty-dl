@@ -44,6 +44,20 @@ impl ResourceDownloader {
         self.name = Some(name);
     }
 
+    /// Retrieves the file name and replaces `\` and `/` by `|`
+    fn get_file_name(&self) -> String {
+        let name = match &self.name {
+            Some(name) => name,
+            None => self
+                .url
+                .path_segments()
+                .and_then(|segments| segments.last())
+                .unwrap_or_else(|| self.url.as_str()),
+        };
+
+        ResourceDownloader::sanitize_file_name(name)
+    }
+
     /// Sends a GET request to the URL of the resource and returns the response.
     async fn send_request(&self) -> Result<Response, DownloadError> {
         let client = Client::new();
@@ -81,14 +95,7 @@ impl Downloader for ResourceDownloader {
     }
 
     async fn download(&self) -> Result<(), DownloadError> {
-        let name = match &self.name {
-            Some(name) => name,
-            None => self
-                .url
-                .path_segments()
-                .and_then(|segments| segments.last())
-                .unwrap_or_else(|| self.url.as_str()),
-        };
+        let name = self.get_file_name();
 
         self.download_to(Path::new("./").join(name)).await
     }

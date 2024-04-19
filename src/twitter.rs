@@ -463,6 +463,7 @@ impl Downloader for TwitterDownloader {
             || url.domain() == Some("www.twitter.com")
             || url.domain() == Some("www.x.com")
     }
+
     /// Downloads and saves the twitter medias at the specified folder path.
     ///
     /// ## Arguments

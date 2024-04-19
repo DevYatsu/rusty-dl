@@ -43,6 +43,11 @@ pub trait Downloader {
     /// Checks if the given URL is a valid Download URL.
     fn is_valid_url(url: &Url) -> bool;
 
+    /// Sanitizes the file name
+    fn sanitize_file_name(s: &str) -> String {
+        s.replace("\\", "|").replace("/", "|")
+    }
+
     /// Downloads and saves the file to the current working directory.
     ///
     /// ## Returns
