@@ -4,7 +4,7 @@ use rusty_dl::{
     Downloader,
 };
 
-// can be the link to a video or a playlist: the downloader detects it and take care of it
+// can be the LINK to a video or a playlist: the downloader detects it and take care of it
 // playlist downloading is limited to 100 videos for the moment
 const LINK: &str = "https://youtube.com/video_id";
 
@@ -45,7 +45,7 @@ async fn video_data(downloader: &YoutubeDownloader) -> Result<VideoInfo, Downloa
 
 #[allow(dead_code)]
 async fn async_example() -> Result<(), DownloadError> {
-    // returns an error if link in invalid
+    // returns an error if LINK in invalid
     let downloader = YoutubeDownloader::new(LINK)?;
 
     // downloads the video(s) in current working dir
@@ -59,8 +59,27 @@ async fn dl_to<P>(path: P) -> Result<(), DownloadError>
 where
     P: AsRef<std::path::Path> + std::marker::Send,
 {
-    // returns an error if link in invalid
+    // returns an error if LINK in invalid
     let downloader = YoutubeDownloader::new(LINK)?;
+
+    // downloads the medias in current working dir
+    // a blocking version of this method also exists
+    downloader.download_to(path).await?;
+
+    Ok(())
+}
+
+#[allow(dead_code)]
+async fn dl_playlist_to<P>(path: P) -> Result<(), DownloadError>
+where
+    P: AsRef<std::path::Path> + std::marker::Send,
+{
+    // we assume LINK is the LINK to a playlist
+    let mut downloader = YoutubeDownloader::new(LINK)?;
+
+    downloader.set_playlist_video_filter(|video| {
+        video.is_playable && video.title.accessibility == &"My fav video"
+    });
 
     // downloads the medias in current working dir
     // a blocking version of this method also exists

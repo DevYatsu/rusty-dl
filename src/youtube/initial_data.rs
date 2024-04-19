@@ -195,13 +195,18 @@ impl PlaylistVideoRenderer {
 pub struct VideoData {
     #[serde(rename = "videoId")]
     pub video_id: String,
-    pub thumbnail: SkippedFields,
+    pub thumbnail: ThumbnailData,
     pub title: VideoTitle,
-    pub index: SkippedFields,
+    pub index: VideoIndex,
+
+    /// This one is not implemented yet, i need to put my mind into it...
     #[serde(rename = "shortBylineText")]
     pub short_byline_text: SkippedFields,
+
     #[serde(rename = "lengthText")]
-    pub length_text: SkippedFields,
+    pub length_text: VideoLengthText,
+
+    /// This one is not implemented yet, i need to put my mind into it...
     #[serde(rename = "navigationEndpoint")]
     pub navigation_endpoint: SkippedFields,
     #[serde(rename = "lengthSeconds")]
@@ -210,11 +215,13 @@ pub struct VideoData {
     pub tracking_params: String,
     #[serde(rename = "isPlayable")]
     pub is_playable: bool,
+
+    /// "menu" json representation is so big i have not the mind to implement it...
     pub menu: SkippedFields,
     #[serde(rename = "thumbnailOverlays")]
-    pub thumbnail_overlays: Vec<SkippedFields>,
+    pub thumbnail_overlays: Vec<VideoThumbnail>,
     #[serde(rename = "videoInfo")]
-    pub video_info: SkippedFields,
+    pub video_info: VideoDataInfo,
 }
 
 impl VideoData {
@@ -239,12 +246,60 @@ impl VideoData {
 }
 
 #[derive(Debug, serde::Deserialize, serde::Serialize, Clone)]
+pub struct VideoIndex {
+    #[serde(rename = "simpleText")]
+    pub simple_text: String,
+}
+
+#[derive(Debug, serde::Deserialize, serde::Serialize, Clone)]
+pub struct VideoDataInfo {
+    pub runs: Vec<VideoDataInfoData>,
+}
+#[derive(Debug, serde::Deserialize, serde::Serialize, Clone)]
+pub struct VideoDataInfoData {
+    pub text: String,
+}
+
+#[derive(Debug, serde::Deserialize, serde::Serialize, Clone)]
 pub struct VideoTitle {
     pub runs: Vec<TitleText>,
-    pub accessibility: SkippedFields,
+    pub accessibility: AccessibilityDataWrapper,
 }
 
 #[derive(Debug, serde::Deserialize, serde::Serialize, Clone)]
 pub struct TitleText {
-    text: String,
+    pub text: String,
+}
+
+#[derive(Debug, serde::Deserialize, serde::Serialize, Clone)]
+pub struct ThumbnailData {
+    pub thumbnails: Vec<VideoThumbnail>,
+}
+
+#[derive(Debug, serde::Deserialize, serde::Serialize, Clone)]
+pub struct VideoThumbnail {
+    pub height: u16,
+    pub url: String,
+    pub width: u16,
+}
+
+#[derive(Debug, serde::Deserialize, serde::Serialize, Clone)]
+pub struct VideoLengthText {
+    pub accessibility: AccessibilityDataWrapper,
+    #[serde(rename = "simpleText")]
+    pub simple_text: String,
+}
+
+// It's shared between several structs, namely: VideoTitle and VideoLengthText
+// so pay attention whenever modifying it
+#[derive(Debug, serde::Deserialize, serde::Serialize, Clone)]
+pub struct AccessibilityDataWrapper {
+    #[serde(rename = "accessibilityData")]
+    pub accessibility_data: AccessibilityData,
+}
+// It's shared between several structs, namely: VideoTitle and VideoLengthText
+// so pay attention whenever modifying it
+#[derive(Debug, serde::Deserialize, serde::Serialize, Clone)]
+pub struct AccessibilityData {
+    pub label: String,
 }
