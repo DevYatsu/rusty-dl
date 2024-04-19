@@ -245,7 +245,9 @@ impl YoutubeDownloader {
             ["contents"][0]["playlistVideoListRenderer"]["contents"];
 
         let videos_renderer: Vec<PlaylistVideoRenderer> =
-            serde_json::from_value(videos_value.to_owned()).unwrap_or_else(|_| Vec::new());
+            serde_json::from_value(videos_value.to_owned()).unwrap();
+
+        println!("{:?}", videos_renderer);
 
         let videos_data: Vec<VideoData> = videos_renderer
             .into_iter()
@@ -399,6 +401,7 @@ impl YoutubeDownloader {
             Some(filter) => playlist.videos.into_iter().filter(filter).collect(),
             None => playlist.videos,
         };
+        println!("{:?}", filtered_videos);
 
         let results =
             futures::future::join_all(filtered_videos.into_iter().map(|video_data| async move {

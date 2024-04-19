@@ -7,7 +7,7 @@ use self::{
     menu::Menu,
     nav_endpoint::NavigationEndpoint,
     short_by_line_text::ShortBylineText,
-    thumbnail::{ThumbnailData, VideoThumbnail},
+    thumbnail::{ThumbnailData, ThumbnailOverlay},
     title::VideoTitle,
 };
 
@@ -37,7 +37,6 @@ pub struct VideoData {
     #[serde(rename = "lengthText")]
     pub length_text: VideoLengthText,
 
-    /// This one is not implemented yet, i need to put my mind into it...
     #[serde(rename = "navigationEndpoint")]
     pub navigation_endpoint: NavigationEndpoint,
     #[serde(rename = "lengthSeconds")]
@@ -49,7 +48,7 @@ pub struct VideoData {
 
     pub menu: Menu,
     #[serde(rename = "thumbnailOverlays")]
-    pub thumbnail_overlays: Vec<VideoThumbnail>,
+    pub thumbnail_overlays: Vec<ThumbnailOverlay>,
     #[serde(rename = "videoInfo")]
     pub video_info: VideoDataInfo,
 }

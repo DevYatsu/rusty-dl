@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-use super::AccessibilityDataWrapper;
+use super::{AccessibilityDataWrapper, SkippedFields};
 
 #[derive(Debug, Deserialize, Serialize, Clone)]
 pub struct Menu {
@@ -30,8 +30,8 @@ pub struct MenuServiceItemRenderer {
     pub text: Text,
     #[serde(rename = "trackingParams")]
     pub tracking_params: String,
-    #[serde(rename = "menuServiceItemRenderer")]
-    pub has_separator: bool,
+    #[serde(rename = "hasSeparator")]
+    pub has_separator: Option<bool>,
 }
 
 #[derive(Debug, Deserialize, Serialize, Clone)]
@@ -47,7 +47,7 @@ pub struct ServiceEndpoint {
     #[serde(rename = "commandMetadata")]
     pub command_metadata: CommandMetadata,
     #[serde(rename = "signalServiceEndpoint")]
-    pub signal_service_endpoint: SignalServiceEndpoint,
+    pub signal_service_endpoint: Option<SignalServiceEndpoint>,
     #[serde(rename = "shareEntityServiceEndpoint")]
     pub share_entity_service_endpoint: Option<ShareEntityServiceEndpoint>,
 }
@@ -114,13 +114,14 @@ pub struct CreatePlaylistServiceEndpoint {
 #[derive(Debug, Deserialize, Serialize, Clone)]
 pub struct ShareEntityServiceEndpoint {
     pub commands: Vec<ShareEntityCommand>,
-    pub serialized_share_entity: String,
+    pub serialized_share_entity: Option<String>,
 }
 
 #[derive(Debug, Deserialize, Serialize, Clone)]
 pub struct ShareEntityCommand {
+    #[serde(rename = "clickTrackingParams")]
     pub click_tracking_params: String,
-    pub open_popup_action: OpenPopupAction,
+    pub open_popup_action: Option<OpenPopupAction>,
 }
 
 #[derive(Debug, Deserialize, Serialize, Clone)]
