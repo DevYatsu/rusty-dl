@@ -78,7 +78,7 @@ where
     let mut downloader = YoutubeDownloader::new(LINK)?;
 
     downloader.set_playlist_video_filter(|video| {
-        video.is_playable && video.title.accessibility == &"My fav video"
+        video.is_playable && video.title.accessibility.accessibility_data.label == "My fav video"
     });
 
     // downloads the medias in current working dir

@@ -1,4 +1,3 @@
-use self::initial_data::VideoData;
 use crate::header::HeaderMapBuilder;
 use crate::prelude::{DownloadError, Downloader};
 use crate::youtube::initial_data::PlaylistVideoRenderer;
@@ -10,8 +9,11 @@ use serde_json::Value;
 use std::path::Path;
 
 mod initial_data;
+mod video_data;
 
 pub use rusty_ytdl::{Video, VideoDetails, VideoInfo, VideoSearchOptions};
+
+pub use self::video_data::VideoData;
 
 /// Returns true if the video should be downloaded, otherwise returns false.
 pub type PlaylistFilter = fn(&VideoData) -> bool;
