@@ -13,7 +13,10 @@ mod initial_data;
 
 pub use rusty_ytdl::{Video, VideoDetails, VideoInfo, VideoSearchOptions};
 
-#[derive(Debug, Clone)]
+/// Returns true if the video should be downloaded, otherwise returns false.
+pub type PlaylistFilter = fn(&VideoData) -> bool;
+
+#[derive(Clone)]
 /// Implementation of a YouTube downloader.
 pub struct YoutubeDownloader {
     url: Url,
@@ -23,6 +26,7 @@ pub struct YoutubeDownloader {
 
     // for playlist downloading
     is_playlist: bool,
+    playlist_video_filter: Option<PlaylistFilter>,
 }
 
 impl YoutubeDownloader {
@@ -64,6 +68,7 @@ impl YoutubeDownloader {
             add_underscores_in_name: false,
             video_name: None,
             is_playlist,
+            playlist_video_filter: None,
         })
     }
 
@@ -74,7 +79,7 @@ impl YoutubeDownloader {
     ///
     /// ## Returns
     ///
-    /// Returns a [`Result`] containing a [`Video`] instance on success, or a [`DownloadError`] if the video is not found.
+    /// Returns a [`Result`] containing a [`Video`] instance on success, or a [`DownloadError`] if the video is not found (also if the link points to a playlist).
     ///
     /// ## Errors
     ///
@@ -292,6 +297,13 @@ impl YoutubeDownloader {
         self
     }
 
+    /// Sets a filter to select which videos in a playlist should be downloaded.
+    ///
+    /// **THIS FUNCTION ONLY WORKS IF THE YOUTUBE LINK POINTS TO A PLAYLIST**
+    pub fn set_playlist_video_filter(&mut self, filter: PlaylistFilter) {
+        self.playlist_video_filter = Some(filter)
+    }
+
     /// Downloads a video to the specified path.
     ///
     /// **This function is not meant to be used  directly by users. Instead it should be called through one of the other functions in this struct.**
@@ -381,8 +393,13 @@ impl YoutubeDownloader {
         let playlist = self.get_playlist().await?;
         let path = &folder_path.as_ref().join(playlist.name);
 
+        let filtered_videos = match self.playlist_video_filter {
+            Some(filter) => playlist.videos.into_iter().filter(filter).collect(),
+            None => playlist.videos,
+        };
+
         let results =
-            futures::future::join_all(playlist.videos.into_iter().map(|video_data| async move {
+            futures::future::join_all(filtered_videos.into_iter().map(|video_data| async move {
                 let video = self.get_video_with_url_or_id(&video_data.video_id)?;
 
                 let title = match video_data.get_title() {
@@ -410,8 +427,8 @@ impl YoutubeDownloader {
     }
 }
 
-#[derive(Debug, Clone)]
 /// Simplified representation of a youtube playlist.
+#[derive(Debug, Clone)]
 pub struct Playlist {
     pub name: String,
     pub videos: Vec<VideoData>,
