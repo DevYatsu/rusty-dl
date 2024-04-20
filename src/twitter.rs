@@ -415,43 +415,44 @@ impl TwitterDownloader {
         Ok(tweet_details)
     }
 
-    /// Downloads the Twitter tweet media and saves it to the specified folder with the tweet ID as the file name.
-    ///
-    /// ## Arguments
-    ///
-    /// * `path` - The path to the folder where the media will be downloaded.
-    ///
-    /// ## Returns
-    ///
-    /// Returns a [`Result`] indicating success or failure of the download operation.
-    pub async fn download_as_tweets_folder_to<P: AsRef<std::path::Path> + Send>(
-        &self,
-        path: P,
-    ) -> Result<(), DownloadError> {
-        let folder_path = path.as_ref();
-        let path_buf = folder_path.join(self.tweet_id());
+    // actually these are useless, we can just use `download_to`!!
+    // /// Downloads the Twitter tweet media and saves it to the specified folder with the tweet ID as the file name.
+    // ///
+    // /// ## Arguments
+    // ///
+    // /// * `path` - The path to the folder where the media will be downloaded.
+    // ///
+    // /// ## Returns
+    // ///
+    // /// Returns a [`Result`] indicating success or failure of the download operation.
+    // pub async fn download_as_tweets_folder_to<P: AsRef<std::path::Path> + Send>(
+    //     &self,
+    //     path: P,
+    // ) -> Result<(), DownloadError> {
+    //     let folder_path = path.as_ref();
+    //     let path_buf = folder_path.join(self.tweet_id());
 
-        self.download_to(path_buf).await
-    }
+    //     self.download_to(path_buf).await
+    // }
 
-    /// Blocks the current thread until the Twitter tweet media is downloaded and saved to the specified folder with the tweet ID as the file name.
-    ///
-    /// ## Arguments
-    ///
-    /// * `path` - The path to the folder where the media will be downloaded.
-    ///
-    /// ## Returns
-    ///
-    /// Returns a [`Result`] indicating success or failure of the download operation.
-    pub fn blocking_download_as_tweets_folder_to(
-        &self,
-        path: &std::path::Path,
-    ) -> Result<(), DownloadError>
-    where
-        Self: Sync,
-    {
-        Self::blocking(async { self.download_as_tweets_folder_to(path).await })
-    }
+    // /// Blocks the current thread until the Twitter tweet media is downloaded and saved to the specified folder with the tweet ID as the file name.
+    // ///
+    // /// ## Arguments
+    // ///
+    // /// * `path` - The path to the folder where the media will be downloaded.
+    // ///
+    // /// ## Returns
+    // ///
+    // /// Returns a [`Result`] indicating success or failure of the download operation.
+    // pub fn blocking_download_as_tweets_folder_to(
+    //     &self,
+    //     path: &std::path::Path,
+    // ) -> Result<(), DownloadError>
+    // where
+    //     Self: Sync,
+    // {
+    //     Self::blocking(async { self.download_as_tweets_folder_to(path).await })
+    // }
 }
 
 #[async_trait::async_trait]

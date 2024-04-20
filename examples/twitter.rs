@@ -47,18 +47,3 @@ async fn download_to_example() -> Result<(), DownloadError> {
 
     Ok(())
 }
-
-#[allow(dead_code)]
-async fn tweet_folder_example() -> Result<(), DownloadError> {
-    // returns an error if link in invalid
-    let downloader = TwitterDownloader::new(LINK)?;
-
-    // downloads the medias as a folder to the given path
-    // Here a folder named "tweet_medias" will be created in current working dir and the medias will be downloaded into it
-    // a blocking version of this method also exists
-    downloader
-        .download_as_tweets_folder_to("./tweet_medias/")
-        .await?;
-
-    Ok(())
-}

@@ -1,3 +1,52 @@
+/// # rusty_dl
+///
+/// Rusty_dl Library is a versatile crate designed for effortlessly fetching a wide range of
+/// content types, including YouTube videos, tweet media (such as videos, images, and gifs),
+/// and eventually various other media directly from the web.
+///
+/// ## Examples
+///
+/// ### In a synchronous environment
+///
+/// Two blocking methods are provided to easily download data in a single thread:
+/// - blocking_download
+/// - blocking_download_to
+///
+/// ```rust
+/// use rusty_dl::prelude::{Downloader, YoutubeDownloader, DownloadError};
+/// const URL: &str = "my_yt_video_link";
+///
+/// fn main() -> Result<(), DownloadError>  {
+///     let downloader = YoutubeDownloader::new(URL);
+///     downloader.blocking_download()
+/// }
+/// ```
+///
+/// ### In a tokio environment
+///
+/// Two methods are provided to easily download data asynchronously:
+/// - download
+/// - download_to
+///
+/// ```rust
+/// use rusty_dl::prelude::{Downloader, YoutubeDownloader, DownloadError};
+/// const URL: &str = "my_yt_video_link";
+///
+/// #[tokio::main]
+/// async fn main() -> Result<(), DownloadError> {
+///     let downloader = YoutubeDownloader::new(URL);
+///
+///     downloader.download().await
+/// }
+/// ```
+///
+/// ### More
+///
+/// These methods can be used with any type that implements the `Downloader` trait.
+/// May that be `TwitterDownloader`, `YoutubeDownloader` or `ResourceDownloader`.
+///
+/// See more in [github's examples directory](https://github.com/DevYatsu/rusty-dl/examples/)
+ 
 pub mod errors;
 pub mod header;
 
