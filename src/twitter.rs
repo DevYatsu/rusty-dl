@@ -1,4 +1,4 @@
-use std::{ffi::OsStr, path::Path, sync::Arc};
+use std::{ffi::OsStr, path::Path};
 
 use self::{
     details::{MediaEntity, TweetDetails, VideoInfo},
@@ -56,7 +56,9 @@ pub struct TwitterDownloader {
     /// Specifies the kind of media to download.
     only_media_kind: Option<MediaKind>,
     /// Callback function for naming downloaded media.
-    names_callback: Arc<dyn Fn(usize, TwitterMedia) -> String + Send + Sync>,
+    names_callback: fn(usize, TwitterMedia) -> String,
+
+    print_download_status: bool,
 }
 
 /// Represents the kind of media to download from Twitter.
@@ -115,7 +117,7 @@ impl TwitterDownloader {
             status_id,
             tweet_id,
             only_media_kind: None,
-            names_callback: Arc::new(|index: usize, media: TwitterMedia| {
+            names_callback: |index: usize, media: TwitterMedia| {
                 let extension = media.extension();
 
                 let filename = extension.map_or_else(
@@ -124,7 +126,8 @@ impl TwitterDownloader {
                 );
 
                 filename
-            }),
+            },
+            print_download_status: false,
         })
     }
 
@@ -149,11 +152,8 @@ impl TwitterDownloader {
     ///     format!("tweet_{}_{}", index + 1, media.extension().unwrap_or_default().to_string_lossy())
     /// });
     /// ```
-    pub fn set_name_callback<F>(&mut self, callback: F) -> &mut Self
-    where
-        F: Fn(usize, TwitterMedia) -> String + Send + Sync + 'static,
-    {
-        self.names_callback = Arc::new(callback);
+    pub fn set_name_callback(&mut self, callback: fn(usize, TwitterMedia) -> String) -> &mut Self {
+        self.names_callback = callback;
 
         self
     }
@@ -408,8 +408,7 @@ impl TwitterDownloader {
         }
 
         let response_text = details.text().await?;
-        let tweet_details = serde_json::from_str(&response_text).map_err(|e| {
-            println!("{:?}", e);
+        let tweet_details = serde_json::from_str(&response_text).map_err(|_e| {
             DownloadError::TwitterError("Failed to parse tweet details.".to_owned())
         })?;
 
@@ -463,6 +462,9 @@ impl Downloader for TwitterDownloader {
             || url.domain() == Some("www.twitter.com")
             || url.domain() == Some("www.x.com")
     }
+    fn print_download_status(&mut self) {
+        self.print_download_status = true
+    }
 
     /// Downloads and saves the twitter medias at the specified folder path.
     ///
@@ -512,19 +514,40 @@ impl Downloader for TwitterDownloader {
             .filter(|x| TwitterMedia::filter_media_kind(x, self.only_media_kind.as_ref()))
             .collect();
 
+        if self.print_download_status {
+            println!("Downloading...");
+        }
+
         tokio::fs::create_dir_all(path).await?;
 
-        for (index, media) in download_links.iter().enumerate() {
-            let url = media.url();
+        let results = futures::future::join_all(download_links.into_iter().enumerate().map(
+            |(index, media)| async move {
+                let url = media.url();
 
-            let rsrc_downloader = ResourceDownloader::new(url).map_err(|_| {
-                DownloadError::TwitterError(format!("Invalid Media File path: `{}`", url))
-            })?;
+                let rsrc_downloader = ResourceDownloader::new(url).map_err(|_| {
+                    DownloadError::TwitterError(format!("Invalid Media File path: `{}`", url))
+                })?;
 
-            let filename = (self.names_callback)(index, *media);
-            let file_path = path.join(filename);
+                let filename = (self.names_callback)(index, media);
+                let file_path = path.join(filename);
 
-            rsrc_downloader.download_to(&file_path).await?;
+                let download_result = rsrc_downloader.download_to(&file_path).await;
+
+                if self.print_download_status {
+                    if let Err(err) = &download_result {
+                        eprintln!("Error downloading with url `{}`: {:?}", url, err);
+                    } else {
+                        println!("Media downloaded successfully: {}", url);
+                    }
+                }
+
+                download_result
+            },
+        ))
+        .await;
+
+        for result in results {
+            result?
         }
 
         Ok(())

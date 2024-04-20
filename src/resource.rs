@@ -12,6 +12,7 @@ use url::Url;
 pub struct ResourceDownloader {
     url: Url,
     name: Option<String>,
+    print_download_status: bool,
 }
 
 impl ResourceDownloader {
@@ -34,7 +35,11 @@ impl ResourceDownloader {
             ));
         }
 
-        Ok(Self { url, name: None })
+        Ok(Self {
+            url,
+            name: None,
+            print_download_status: false,
+        })
     }
 
     /// Sets the output filename for downloaded resources. If not set, the filename will be derived from the last part of the link path.
@@ -81,6 +86,10 @@ impl Downloader for ResourceDownloader {
     ) -> Result<(), DownloadError> {
         let path = file_path.as_ref();
 
+        if self.print_download_status {
+            println!("Downloading...");
+        }
+
         if let Some(parent) = path.parent() {
             create_dir_all(parent).await?
         }
@@ -102,5 +111,9 @@ impl Downloader for ResourceDownloader {
 
     fn is_valid_url(url: &Url) -> bool {
         url.has_host() && (url.scheme() == "https" || url.scheme() == "http")
+    }
+
+    fn print_download_status(&mut self) {
+        self.print_download_status = true
     }
 }

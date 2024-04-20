@@ -43,6 +43,9 @@ pub trait Downloader {
     /// Checks if the given URL is a valid Download URL.
     fn is_valid_url(url: &Url) -> bool;
 
+    /// A function used to print the download status, that is print a message so that the user can keep track of the downloaded files.
+    fn print_download_status(&mut self);
+
     /// Sanitizes the file name
     fn sanitize_file_name(s: &str) -> String {
         s.replace("\\", "|").replace("/", "|")

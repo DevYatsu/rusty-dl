@@ -29,6 +29,8 @@ pub struct YoutubeDownloader {
     // for playlist downloading
     is_playlist: bool,
     playlist_video_filter: Option<PlaylistFilter>,
+
+    print_download_status: bool,
 }
 
 impl YoutubeDownloader {
@@ -69,8 +71,11 @@ impl YoutubeDownloader {
             filter: VideoSearchOptions::VideoAudio,
             add_underscores_in_name: false,
             video_name: None,
+
             is_playlist,
             playlist_video_filter: None,
+
+            print_download_status: false,
         })
     }
 
@@ -413,10 +418,12 @@ impl YoutubeDownloader {
                     .download_video_to_path(video, path.join(&Self::sanitize_file_name(&title)))
                     .await;
 
-                if let Err(err) = &download_result {
-                    eprintln!("Error downloading video named `{}`: {:?}", title, err);
-                } else {
-                    println!("Video downloaded successfully: {}", title);
+                if self.print_download_status {
+                    if let Err(err) = &download_result {
+                        eprintln!("Error downloading video named `{}`: {:?}", title, err);
+                    } else {
+                        println!("Video downloaded successfully: {}", title);
+                    }
                 }
 
                 download_result
@@ -444,6 +451,10 @@ impl Downloader for YoutubeDownloader {
         &self,
         folder_path: P,
     ) -> Result<(), DownloadError> {
+        if self.print_download_status {
+            println!("Downloading...");
+        }
+
         let path = folder_path.as_ref();
 
         if self.is_playlist {
@@ -477,5 +488,8 @@ impl Downloader for YoutubeDownloader {
             || url.domain() == Some("youtu.be")
             || url.domain() == Some("www.youtube.com")
             || url.domain() == Some("www.youtu.be")
+    }
+    fn print_download_status(&mut self) {
+        self.print_download_status = true
     }
 }
