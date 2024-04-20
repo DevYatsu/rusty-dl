@@ -4,13 +4,13 @@ Rusty_dl_cli is a command-line interface (CLI) tool built to complement the func
 
 ## Features
 
-Like the main library...
+**Like the main library...**
 
 - Download YouTube videos
 - Download tweet media (videos, images, gifs)
 - Download other media from the web (through url fetching)
 
-But all that from the console!
+**But all that from the console!**
 
 ## Usage
 
