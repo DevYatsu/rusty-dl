@@ -4,6 +4,6 @@ This folder contains examples demonstrating how to use the `rusty_dl` crate to d
 
 ## Files
 
-- `resource.rs`: Demonstrates how to download media from a generic URL.
-- `twitter.rs`: Demonstrates how to download media from tweets (videos, images, gifs).
-- `youtube.rs`: Demonstrates how to download YouTube videos.
+- [`resource.rs`](./resource.rs): Demonstrates how to download media from a generic URL.
+- [`twitter.rs`](./twitter.rs): Demonstrates how to download media from tweets (videos, images, gifs).
+- [`youtube.rs`](./youtube.rs): Demonstrates how to download YouTube videos.
