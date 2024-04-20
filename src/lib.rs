@@ -40,13 +40,12 @@
 //! }
 //! ```
 //!
-//! ### More
+//! ## More
 //!
 //! These methods can be used with any type that implements the `Downloader` trait.
 //! May that be `TwitterDownloader`, `YoutubeDownloader` or `ResourceDownloader`.
 //!
 //! See more in [github's examples directory](https://github.com/DevYatsu/rusty-dl/examples/)
- 
 pub mod errors;
 pub mod header;
 
