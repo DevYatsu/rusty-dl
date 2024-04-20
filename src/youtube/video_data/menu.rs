@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-use super::{AccessibilityDataWrapper, SkippedFields};
+use super::AccessibilityDataWrapper;
 
 #[derive(Debug, Deserialize, Serialize, Clone)]
 pub struct Menu {
