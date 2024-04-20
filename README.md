@@ -27,6 +27,12 @@ Rusty_dl Library is a versatile crate designed for effortlessly fetching a wide 
 
 ## To get started
 
+- Add the crate to your project
+
+```bash
+cargo add rusty_dl
+```
+
 - Using the crate in a synchronous environment
 
 ```rust
