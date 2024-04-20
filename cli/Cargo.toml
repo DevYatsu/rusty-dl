@@ -1,0 +1,13 @@
+[package]
+name = "rusty_dl_cli"
+authors = ["yatsu"] 
+version = "0.1.0"
+edition = "2021"
+license = "MIT OR Apache-2.0"
+keywords = ["download", "videos", "youtube", "twitter", "medias"]
+description = "A CLI for downloading youtube videos, twitter medias (videos, images, gif) from tweets and files on the web."
+readme = "README.md"
+repository = "https://github.com/DevYatsu/rusty-dl"
+categories = ["internet", "media", "utilities"]
+
+[dependencies]
