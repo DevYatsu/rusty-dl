@@ -28,7 +28,7 @@ Rusty_dl Library is a versatile crate designed for effortlessly fetching a wide 
 - [ ] Develop a desktop application (using Tauri ?)
 - [ ] Build a web application for downloading media from the browser
 
-## To get started
+## Get started
 
 - Add the crate to your project
 
