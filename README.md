@@ -1,7 +1,8 @@
 # rusty_dl
 
+[![LICENSE](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![crates.io Version](https://img.shields.io/crates/v/rusty_dl.svg)](https://crates.io/crates/rusty_dl)
-[![Minimum rustc version](https://img.shields.io/badge/rustc-1.65.0+-lightgray.svg)](#rust-version-requirements)
+[![Minimum rustc version](https://img.shields.io/badge/rustc-1.70.0+-lightgray.svg)]
 
 Rusty_dl Library is a versatile crate designed for effortlessly fetching a wide range of content types, including YouTube videos, tweet media (such as videos, images, and gifs), and eventually various other media directly from the web.
 
@@ -68,10 +69,6 @@ async fn main() -> Result<(), DownloadError> {
 This crate also exports a TwitterDownloader and a ResourceDownloader which work the same way as presented up there.
 
 See more in [examples directory](/examples/)
-
-## Rust Version Requirements
-
-As of now, this crate requires **Rustc version 1.65** or later. However, there are plans to lower this requirement in upcoming releases.
 
 ## Contributing
 
