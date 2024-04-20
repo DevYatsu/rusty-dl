@@ -33,7 +33,7 @@ Rusty_dl Library is a versatile crate designed for effortlessly fetching a wide 
 cargo add rusty_dl
 ```
 
-- Using the crate in a synchronous environment
+- Use the crate in a synchronous environment
 
 ```rust
 use rusty_dl::prelude::{Downloader, YoutubeDownloader, DownloadError};
@@ -47,7 +47,7 @@ fn main() -> Result<(), DownloadError>  {
 }
 ```
 
-- Using the crate in a tokio environment
+- Use the crate in a tokio environment
 
 ```rust
 use rusty_dl::prelude::{Downloader, YoutubeDownloader, DownloadError};
