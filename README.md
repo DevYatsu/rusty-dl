@@ -56,7 +56,7 @@ async fn main() -> Result<(), DownloadError> {
 }
 ```
 
-The crates also exports a TwitterDownloader and a ResourceDownloader which work the same way as presented up there.
+This crate also exports a TwitterDownloader and a ResourceDownloader which work the same way as presented up there.
 
 See more in [examples directory](/examples/)...
 
