@@ -30,7 +30,7 @@ Rusty_dl Library is a versatile crate designed for effortlessly fetching a wide 
 - Add the crate to your project
 
 ```bash
-$ cargo add rusty_dl
+cargo add rusty_dl
 ```
 
 - Using the crate in a synchronous environment
