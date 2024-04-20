@@ -22,6 +22,9 @@ fn main() -> Result<(), DownloadError> {
     // downloads only the video and not the audio
     downloader.only_video();
 
+    // keeps track of the download status in the console
+    downloader.print_dl_status();
+
     // renames the video with underscores locally
     downloader.rename_with_underscores();
 

@@ -43,8 +43,20 @@ pub trait Downloader {
     /// Checks if the given URL is a valid Download URL.
     fn is_valid_url(url: &Url) -> bool;
 
-    /// A function used to print the download status, that is print a message so that the user can keep track of the downloaded files.
-    fn print_download_status(&mut self);
+    /// Prints the download status.
+    ///
+    /// This function sets the field print_download_status to `true` and thus allows displaying the current progress of the download to the console.
+    fn print_dl_status(&mut self) -> &mut Self {
+        let status = self.get_dl_status();
+        *status = true;
+
+        self
+    }
+
+    /// Gets a mutable reference to the download status.
+    ///
+    /// This function returns a mutable reference to the download status, allowing it to be modified.
+    fn get_dl_status(&mut self) -> &mut bool;
 
     /// Sanitizes the file name
     fn sanitize_file_name(s: &str) -> String {

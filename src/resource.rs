@@ -113,7 +113,7 @@ impl Downloader for ResourceDownloader {
         url.has_host() && (url.scheme() == "https" || url.scheme() == "http")
     }
 
-    fn print_download_status(&mut self) {
-        self.print_download_status = true
+    fn get_dl_status(&mut self) -> &mut bool {
+        &mut self.print_download_status
     }
 }

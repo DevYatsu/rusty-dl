@@ -10,6 +10,9 @@ fn main() -> Result<(), DownloadError> {
     // will download the file with the given name
     downloader.with_name("mozilla_icon.svg".to_owned());
 
+    // keeps track of the download status in the console
+    downloader.print_dl_status();
+
     // blocks the main thread to download the given resource
     downloader.blocking_download()?;
 

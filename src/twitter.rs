@@ -462,8 +462,9 @@ impl Downloader for TwitterDownloader {
             || url.domain() == Some("www.twitter.com")
             || url.domain() == Some("www.x.com")
     }
-    fn print_download_status(&mut self) {
-        self.print_download_status = true
+
+    fn get_dl_status(&mut self) -> &mut bool {
+        &mut self.print_download_status
     }
 
     /// Downloads and saves the twitter medias at the specified folder path.

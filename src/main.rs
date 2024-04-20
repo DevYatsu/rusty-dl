@@ -17,17 +17,18 @@ async fn main() -> Result<(), DownloadError> {
             let mut downloader = TwitterDownloader::new(link.as_str())?;
 
             downloader
+                .print_dl_status()
                 .set_name_callback(names_callback)
                 .download()
                 .await?;
         }
         link if YoutubeDownloader::is_valid_url(&url) => {
-            let downloader = YoutubeDownloader::new(link.as_str())?;
-            downloader.download().await?;
+            let mut downloader = YoutubeDownloader::new(link.as_str())?;
+            downloader.print_dl_status().download().await?;
         }
         _ => {
-            let downloader = ResourceDownloader::new(link.as_str())?;
-            downloader.download().await?;
+            let mut downloader = ResourceDownloader::new(link.as_str())?;
+            downloader.print_dl_status().download().await?;
         }
     };
 

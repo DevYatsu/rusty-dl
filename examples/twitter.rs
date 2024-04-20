@@ -12,6 +12,9 @@ fn main() -> Result<(), DownloadError> {
     // to download only videos
     downloader.only_videos();
 
+    // keeps track of the download status in the console
+    downloader.print_dl_status();
+
     // set a callback to name the generated media files
     // here the files will have as name the index of the file
     downloader.set_name_callback(|index, _media| index.to_string());

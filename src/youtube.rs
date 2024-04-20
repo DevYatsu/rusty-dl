@@ -489,7 +489,8 @@ impl Downloader for YoutubeDownloader {
             || url.domain() == Some("www.youtube.com")
             || url.domain() == Some("www.youtu.be")
     }
-    fn print_download_status(&mut self) {
-        self.print_download_status = true
+
+    fn get_dl_status(&mut self) -> &mut bool {
+        &mut self.print_download_status
     }
 }
