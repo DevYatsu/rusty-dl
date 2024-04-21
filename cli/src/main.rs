@@ -1,13 +1,13 @@
 use std::path::{Path, PathBuf};
 
 use clap::{arg, command, value_parser, ArgAction, Command, Error};
-use rusty_dl::prelude::*;
+use rusty_dl::{prelude::*, twitter::TwitterMedia};
 use url::Url;
 
 fn main() -> Result<(), DownloadError> {
     let matches = command!()
         .arg(
-            arg!([link] "The link to download the resource from")
+            arg!(<LINK> "The link to download the resource from")
                 .required(true)
                 .value_parser(is_valid_download_url),
         )
@@ -16,10 +16,23 @@ fn main() -> Result<(), DownloadError> {
                 .required(false)
                 .value_parser(value_parser!(PathBuf)),
         )
+        .arg(
+            arg!(-n --name <NAME> "The name of the downloaded file"
+
+            )
+            .required(false),
+        )
+        .arg(
+            arg!(-i --id "Set the name of the downloaded youtube video or twitter media as their id(s)"
+            )
+            .required(false)
+            .value_parser(value_parser!(bool)),
+        )
         .get_matches();
 
     let link = matches.get_one::<Url>("link");
     let path = matches.get_one::<PathBuf>("path");
+    let file_name = matches.get_one::<String>("name");
 
     let url = link.unwrap(/* safe as we set it as required beforehand */);
 
@@ -27,12 +40,37 @@ fn main() -> Result<(), DownloadError> {
 
     let downloader: DownloaderWrapper = match url {
         link if TwitterDownloader::is_valid_url(url) => {
-            TwitterDownloader::new(link.as_str()).unwrap().into()
+            let mut downloader = TwitterDownloader::new(link.as_str()).unwrap();
+
+            if let Some(name) = file_name {
+                fn callback_wrapper(i: usize, media: TwitterMedia) -> String {
+                    // Your closure code here
+                    name.to_owned()
+                }
+
+                downloader.set_name_callback(move |_i, media| name.to_owned());
+            }
+
+            downloader.into()
         }
         link if YoutubeDownloader::is_valid_url(url) => {
-            YoutubeDownloader::new(link.as_str()).unwrap().into()
+            let mut downloader = YoutubeDownloader::new(link.as_str()).unwrap();
+
+            if let Some(name) = file_name {
+                downloader.with_name(name.to_owned());
+            }
+
+            downloader.into()
         }
-        link => ResourceDownloader::new(link.as_str()).unwrap().into(),
+        link => {
+            let mut downloader = ResourceDownloader::new(link.as_str()).unwrap();
+
+            if let Some(name) = file_name {
+                downloader.with_name(name.to_owned());
+            }
+
+            downloader.into()
+        }
     };
 
     match path {
