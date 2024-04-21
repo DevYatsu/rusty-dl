@@ -12,12 +12,12 @@
 //! - blocking_download
 //! - blocking_download_to
 //!
-//! ```rust
+//! ```rust no_run
 //! use rusty_dl::prelude::{Downloader, YoutubeDownloader, DownloadError};
 //! const URL: &str = "my_yt_video_link";
 //!
 //! fn main() -> Result<(), DownloadError>  {
-//!     let downloader = YoutubeDownloader::new(URL);
+//!     let downloader = YoutubeDownloader::new(URL).expect("INVALID URL");
 //!     downloader.blocking_download()
 //! }
 //! ```
@@ -28,13 +28,13 @@
 //! - download
 //! - download_to
 //!
-//! ```rust
+//! ```rust no_run
 //! use rusty_dl::prelude::{Downloader, YoutubeDownloader, DownloadError};
 //! const URL: &str = "my_yt_video_link";
 //!
 //! #[tokio::main]
 //! async fn main() -> Result<(), DownloadError> {
-//!     let downloader = YoutubeDownloader::new(URL);
+//!     let downloader = YoutubeDownloader::new(URL).expect("INVALID URL");
 //!
 //!     downloader.download().await
 //! }
@@ -119,7 +119,7 @@ pub trait Downloader {
     ///
     /// ## Examples
     ///
-    /// ```
+    /// ```no_run
     /// use rusty_dl::prelude::{DownloadError, Downloader, ResourceDownloader}; // ResourceDownloader is used but it could be YoutubeDownloader or any other struct implementing Downloader trait
     ///
     /// #[tokio::main]
@@ -134,11 +134,11 @@ pub trait Downloader {
         self.download_to("./").await
     }
 
-    /// Downloads and saves the file at the specified path.
+    /// Downloads and saves the file(s) to the specified folder.
     ///
     /// ## Arguments
     ///
-    /// * `path` - The path to the file where the resource will be downloaded.
+    /// * `folder_path` - The path to the folder where the resource(s) will be saved.
     ///
     /// ## Returns
     ///
@@ -146,20 +146,20 @@ pub trait Downloader {
     ///
     /// ## Examples
     ///
-    /// ```
+    /// ```no_run
     /// use rusty_dl::prelude::{DownloadError, Downloader, ResourceDownloader}; // ResourceDownloader is used but it could be YoutubeDownloader or any other struct implementing Downloader trait
     ///
     /// #[tokio::main]
     /// async fn main() -> Result<(), DownloadError> {
     ///     let downloader = ResourceDownloader::new("https://www.youtube.com/manifest.webmanifest").unwrap();
-    ///     let result = downloader.download_to("./downloads/manifest.webmanifest").await?;
+    ///     let result = downloader.download_to("./downloads/").await?;
     ///
     ///     Ok(())
     /// }
     /// ```
     async fn download_to<P: AsRef<Path> + std::marker::Send>(
         &self,
-        path: P,
+        folder_path: P,
     ) -> Result<(), DownloadError>;
 
     /// Blocks the current thread until the download completes, using asynchronous execution.
@@ -172,7 +172,7 @@ pub trait Downloader {
     ///
     /// ## Examples
     ///
-    /// ```
+    /// ```no_run
     /// use rusty_dl::prelude::{DownloadError, Downloader, ResourceDownloader}; // ResourceDownloader is used but it could be YoutubeDownloader or any other struct implementing Downloader trait
     ///
     /// fn main() -> Result<(), DownloadError> {
@@ -201,7 +201,7 @@ pub trait Downloader {
     ///
     /// ## Example
     ///
-    /// ```
+    /// ```no_run
     /// use rusty_dl::prelude::{DownloadError, Downloader, ResourceDownloader}; // ResourceDownloader is used but it could be YoutubeDownloader or any other struct implementing Downloader trait
     ///
     /// fn main() -> Result<(), DownloadError> {

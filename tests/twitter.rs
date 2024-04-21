@@ -12,7 +12,7 @@ async fn twitter() -> Result<(), DownloadError> {
     let results = futures::future::join_all(lines.into_iter().map(|line| async move {
         let downloader = TwitterDownloader::new(line.trim())?;
         downloader
-            .download_to(Path::new(&format!("./tweets/{}/", downloader.tweet_id())))
+            .download_to(Path::new(&format!("./tests-run/tweets/{}/", downloader.tweet_id())))
             .await
     }))
     .await;
@@ -23,7 +23,7 @@ async fn twitter() -> Result<(), DownloadError> {
 
     println!("it took {} seconds!", start.elapsed().as_secs_f64());
 
-    assert_folder_len("./tweets/", 10)?;
+    assert_folder_len("./tests-run/tweets/", 10)?;
 
     Ok(())
 }

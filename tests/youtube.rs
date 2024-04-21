@@ -11,7 +11,7 @@ async fn youtube() -> Result<(), DownloadError> {
     let lines = content.lines();
 
     let results = futures::future::join_all(lines.into_iter().map(|line| async move {
-        let downloader = YoutubeDownloader::new(line.trim())?;
+        let mut downloader = YoutubeDownloader::new(line.trim())?;
         let video_name = downloader
             .get_video()?
             .get_basic_info()
@@ -19,13 +19,14 @@ async fn youtube() -> Result<(), DownloadError> {
             .video_details
             .title;
 
-        downloader
-            .download_to(
-                Path::new("./videos/")
-                    .join(video_name)
-                    .with_extension("mp4"),
-            )
-            .await
+        downloader.with_name(
+            Path::new(&video_name)
+                .with_extension("mp4")
+                .to_string_lossy()
+                .to_string(),
+        );
+
+        downloader.download_to(Path::new("./tests-run/videos/")).await
     }))
     .await;
 
@@ -33,7 +34,7 @@ async fn youtube() -> Result<(), DownloadError> {
         result?
     }
 
-    assert_folder_len("./videos/", 2)?;
+    assert_folder_len("./tests-run/videos/", 2)?;
 
     println!("Download finished!");
     println!("it took {} seconds!", start.elapsed().as_secs_f64());
@@ -50,7 +51,7 @@ async fn youtube_basic() -> Result<(), DownloadError> {
     let mut lines = content.lines();
 
     let downloader = YoutubeDownloader::new(lines.next().unwrap()).unwrap();
-    let result = downloader.download().await;
+    let result = downloader.download_to("./tests-run/").await;
 
     assert!(result.is_ok());
 

@@ -82,9 +82,12 @@ impl ResourceDownloader {
 impl Downloader for ResourceDownloader {
     async fn download_to<P: AsRef<Path> + std::marker::Send>(
         &self,
-        file_path: P,
+        folder_path: P,
     ) -> Result<(), DownloadError> {
-        let path = file_path.as_ref();
+        let name = self.get_file_name();
+        let path = folder_path
+            .as_ref()
+            .join(self.name.clone().unwrap_or_else(|| name));
 
         if self.print_download_status {
             println!("Downloading...");

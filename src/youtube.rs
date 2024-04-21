@@ -274,7 +274,7 @@ impl YoutubeDownloader {
     /// ## Arguments
     ///
     /// * `new_name` - The new name for the downloaded video.
-    pub fn set_name(&mut self, new_name: String) -> &mut Self {
+    pub fn with_name(&mut self, new_name: String) -> &mut Self {
         self.video_name = Some(new_name);
 
         self
@@ -455,7 +455,12 @@ impl Downloader for YoutubeDownloader {
             println!("Downloading...");
         }
 
-        let path = folder_path.as_ref();
+        let name = match self.video_name.to_owned() {
+            Some(value) => value,
+            None => Self::get_video_title(self.url.as_str()).await?,
+        };
+
+        let path = folder_path.as_ref().join(Self::sanitize_file_name(&name));
 
         if self.is_playlist {
             self.download_playlist_to(path).await?;
@@ -477,7 +482,13 @@ impl Downloader for YoutubeDownloader {
         }
 
         let video = self.get_video()?;
-        let title = Self::sanitize_file_name(&Self::get_video_title(self.url.as_str()).await?);
+
+        let name = match self.video_name.to_owned() {
+            Some(value) => value,
+            None => Self::get_video_title(self.url.as_str()).await?,
+        };
+
+        let title = Self::sanitize_file_name(&name);
 
         self.download_video_to_path(video, Path::new("./").join(&title))
             .await

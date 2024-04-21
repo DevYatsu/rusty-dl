@@ -30,7 +30,7 @@ fn main() -> Result<(), DownloadError> {
 
     // sets a custom name to the downloaded video
     // initially the local name will be the name attached to the video in the youtube api
-    downloader.set_name("My fav video".to_owned());
+    downloader.with_name("My fav video".to_owned());
 
     // blocks the main thread to download the video(s)
     downloader.blocking_download()?;

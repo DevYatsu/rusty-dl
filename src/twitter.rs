@@ -89,7 +89,7 @@ impl TwitterDownloader {
     ///
     /// ## Examples
     ///
-    /// ```
+    /// ```no_run
     /// use rusty_dl::prelude::TwitterDownloader;
     ///
     /// let link = "https://twitter.com/user/status/123456789";
@@ -468,29 +468,6 @@ impl Downloader for TwitterDownloader {
         &mut self.print_download_status
     }
 
-    /// Downloads and saves the twitter medias at the specified folder path.
-    ///
-    /// ## Arguments
-    ///
-    /// * `path` - The path to the folder where the resources will be downloaded.
-    ///
-    /// ## Returns
-    ///
-    /// Returns a future representing the download operation, which resolves to a [`Result`] indicating success or failure.
-    ///
-    /// ## Examples
-    ///
-    /// ```
-    /// use rusty_dl::prelude::{DownloadError, Downloader, TwitterDownloader};
-    ///
-    /// #[tokio::main]
-    /// async fn main() -> Result<(), DownloadError> {
-    ///     let downloader = TwitterDownloader::new("https://x.com/SpaceX/status/1776826998360613348").unwrap();
-    ///     let result = downloader.download_to("./twitter_medias/").await?;
-    ///
-    ///     Ok(())
-    /// }
-    /// ```
     async fn download_to<P: AsRef<Path> + std::marker::Send>(
         &self,
         folder_path: P,
@@ -526,14 +503,14 @@ impl Downloader for TwitterDownloader {
             |(index, media)| async move {
                 let url = media.url();
 
-                let rsrc_downloader = ResourceDownloader::new(url).map_err(|_| {
+                let mut rsrc_downloader = ResourceDownloader::new(url).map_err(|_| {
                     DownloadError::TwitterError(format!("Invalid Media File path: `{}`", url))
                 })?;
 
                 let filename = (self.names_callback)(index, media);
-                let file_path = path.join(filename);
+                rsrc_downloader.with_name(filename);
 
-                let download_result = rsrc_downloader.download_to(&file_path).await;
+                let download_result = rsrc_downloader.download_to(&path).await;
 
                 if self.print_download_status {
                     if let Err(err) = &download_result {
@@ -563,7 +540,7 @@ impl Downloader for TwitterDownloader {
     ///
     /// ## Examples
     ///
-    /// ```
+    /// ```no_run
     /// use rusty_dl::prelude::{DownloadError, Downloader, TwitterDownloader};
     ///
     /// #[tokio::main]
@@ -588,7 +565,7 @@ impl Downloader for TwitterDownloader {
     ///
     /// ## Examples
     ///
-    /// ```
+    /// ```no_run
     /// use rusty_dl::prelude::{DownloadError, Downloader, TwitterDownloader};
     ///
     /// fn main() -> Result<(), DownloadError> {
@@ -617,7 +594,7 @@ impl Downloader for TwitterDownloader {
     ///
     /// ## Example
     ///
-    /// ```
+    /// ```no_run
     /// use rusty_dl::prelude::{DownloadError, Downloader, TwitterDownloader};
     ///
     /// fn main() -> Result<(), DownloadError> {
