@@ -3,7 +3,7 @@ workspace = { members = ["cli"] }
 [package]
 name = "rusty_dl"
 authors = ["yatsu"]
-version = "1.0.5"
+version = "1.0.7"
 edition = "2021"
 license = "MIT OR Apache-2.0"
 keywords = ["download", "videos", "youtube", "twitter", "medias"]
