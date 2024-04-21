@@ -60,7 +60,7 @@ impl ResourceDownloader {
                 .unwrap_or_else(|| self.url.as_str()),
         };
 
-        ResourceDownloader::sanitize_file_name(name)
+        ResourceDownloader::sanitize_file_name(&name)
     }
 
     /// Sends a GET request to the URL of the resource and returns the response.
@@ -87,15 +87,13 @@ impl Downloader for ResourceDownloader {
         let name = self.get_file_name();
         let path = folder_path
             .as_ref()
-            .join(self.name.clone().unwrap_or_else(|| name));
+            .join(name);
 
         if self.print_download_status {
             println!("Downloading...");
         }
 
-        if let Some(parent) = path.parent() {
-            create_dir_all(parent).await?
-        }
+        create_dir_all(folder_path).await?;
 
         let mut file = File::create(path).await?;
 
@@ -107,9 +105,7 @@ impl Downloader for ResourceDownloader {
     }
 
     async fn download(&self) -> Result<(), DownloadError> {
-        let name = self.get_file_name();
-
-        self.download_to(Path::new("./").join(name)).await
+        self.download_to(Path::new("./")).await
     }
 
     fn is_valid_url(url: &Url) -> bool {

@@ -547,12 +547,7 @@ impl Downloader for TwitterDownloader {
                     (self.names_callback)(index, media)
                 };
 
-                match media.extension() {
-                    Some(ext) => {
-                        rsrc_downloader.with_name(format!("{}.{}", filename, ext.to_string_lossy()))
-                    }
-                    None => rsrc_downloader.with_name(filename),
-                };
+                rsrc_downloader.with_name(filename);
 
                 let download_result = rsrc_downloader.download_to(&path).await;
 

@@ -12,39 +12,28 @@ fn main() -> Result<(), DownloadError> {
                 .value_parser(is_valid_download_url),
         )
         .arg(
-            arg!([path] "The local path to download the resource to, may be relative or absolute")
+            arg!([PATH] "The local path to download the resource to, may be relative or absolute")
                 .required(false)
                 .value_parser(value_parser!(PathBuf)),
         )
-        .arg(
-            arg!(-n --name <NAME> "The name of the downloaded file"
-
-            )
-            .required(false),
-        )
-        .arg(
-            arg!(-i --id "Set the name of the downloaded youtube video or twitter media as their id(s)"
-            )
-            .required(false)
-            .value_parser(value_parser!(bool)),
-        )
+        .arg(arg!(-n --name <name> "The name of the downloaded file").required(false))
         .get_matches();
 
-    let link = matches.get_one::<Url>("link");
-    let path = matches.get_one::<PathBuf>("path");
+    let link = matches.get_one::<Url>("LINK");
+    let path = matches.get_one::<PathBuf>("PATH");
     let file_name = matches.get_one::<String>("name");
 
+    println!("{:?}", link);
     let url = link.unwrap(/* safe as we set it as required beforehand */);
 
-    let rt = tokio::runtime::Runtime::new().expect("tokio runtime can be initialized");
+    let rt = tokio::runtime::Runtime::new().expect("tokio runtime cannot be initialized");
 
     let downloader: DownloaderWrapper = match url {
         link if TwitterDownloader::is_valid_url(url) => {
             let mut downloader = TwitterDownloader::new(link.as_str()).unwrap();
 
             if let Some(name) = file_name {
-
-                // downloader.name_all();
+                downloader.name_all(name.to_owned());
             }
 
             downloader.into()
