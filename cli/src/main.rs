@@ -23,7 +23,6 @@ fn main() -> Result<(), DownloadError> {
     let path = matches.get_one::<PathBuf>("PATH");
     let file_name = matches.get_one::<String>("name");
 
-    println!("{:?}", link);
     let url = link.unwrap(/* safe as we set it as required beforehand */);
 
     let rt = tokio::runtime::Runtime::new().expect("tokio runtime cannot be initialized");

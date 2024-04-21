@@ -12,6 +12,6 @@ categories = ["internet", "media", "utilities", "cli"]
 
 [dependencies]
 clap = {version =  "4.5.4", features = ["cargo"]}
-rusty_dl = "1.0.7"
+rusty_dl = "1.0.8"
 tokio = "1.37.0"
 url = "2.5.0"
