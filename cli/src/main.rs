@@ -1,7 +1,7 @@
 use std::path::{Path, PathBuf};
 
-use clap::{arg, command, value_parser, ArgAction, Command, Error};
-use rusty_dl::{prelude::*, twitter::TwitterMedia};
+use clap::{arg, command, value_parser};
+use rusty_dl::prelude::*;
 use url::Url;
 
 fn main() -> Result<(), DownloadError> {
@@ -16,18 +16,20 @@ fn main() -> Result<(), DownloadError> {
                 .required(false)
                 .value_parser(value_parser!(PathBuf)),
         )
-        .arg(arg!(-n --name <name> "The name of the downloaded file").required(false))
+        .arg(arg!(-n --name <name> "The name of the downloaded file"))
+        .arg(arg!(-s --status "Print progress information on the downloading"))
         .get_matches();
 
     let link = matches.get_one::<Url>("LINK");
     let path = matches.get_one::<PathBuf>("PATH");
     let file_name = matches.get_one::<String>("name");
+    let print_status_info = matches.get_one::<bool>("status").unwrap_or(&false);
 
     let url = link.unwrap(/* safe as we set it as required beforehand */);
 
     let rt = tokio::runtime::Runtime::new().expect("tokio runtime cannot be initialized");
 
-    let downloader: DownloaderWrapper = match url {
+    let mut downloader: DownloaderWrapper = match url {
         link if TwitterDownloader::is_valid_url(url) => {
             let mut downloader = TwitterDownloader::new(link.as_str()).unwrap();
 
@@ -56,6 +58,10 @@ fn main() -> Result<(), DownloadError> {
             downloader.into()
         }
     };
+
+    if *print_status_info {
+        downloader.print_status_info()
+    }
 
     match path {
         Some(path) => rt.block_on(downloader.download_to(path))?,
@@ -92,6 +98,20 @@ impl DownloaderWrapper {
             DownloaderWrapper::Rsrc(d) => d.download_to(path).await,
             DownloaderWrapper::Yt(d) => d.download_to(path).await,
             DownloaderWrapper::Twi(d) => d.download_to(path).await,
+        }
+    }
+
+    pub fn print_status_info(&mut self) {
+        match self {
+            DownloaderWrapper::Rsrc(d) => {
+                d.print_dl_status();
+            }
+            DownloaderWrapper::Yt(d) => {
+                d.print_dl_status();
+            }
+            DownloaderWrapper::Twi(d) => {
+                d.print_dl_status();
+            }
         }
     }
 }
