@@ -131,7 +131,7 @@ impl TwitterDownloader {
 
                 filename
             },
-            name_all:  None,
+            name_all: None,
             name_if_only_one_file: None,
             print_download_status: false,
         })
@@ -165,7 +165,7 @@ impl TwitterDownloader {
     }
 
     /// Set a given name for all the downloaded file.
-    /// 
+    ///
     /// **THIS FUNCTION TAKES PRECEDENCE OVER `set_name_callback`.**
     pub fn name_all(&mut self, value: String) -> &mut Self {
         self.name_all = Some(value);
@@ -174,14 +174,13 @@ impl TwitterDownloader {
     }
 
     /// Set a given name for a downloaded media if the tweet only contains one media.
-    /// 
+    ///
     /// **THIS FUNCTION TAKES PRECEDENCE OVER `set_name_callback` and `name_all`.**
     pub fn name_if_only_file(&mut self, value: String) -> &mut Self {
         self.name_if_only_one_file = Some(value);
 
         self
     }
-
 
     /// Retrieves the media entities associated with the Twitter tweet.
     ///
@@ -533,16 +532,27 @@ impl Downloader for TwitterDownloader {
                 let mut rsrc_downloader = ResourceDownloader::new(url).map_err(|_| {
                     DownloadError::TwitterError(format!("Invalid Media File path: `{}`", url))
                 })?;
-                
+
                 let filename = if self.name_if_only_one_file.is_some() && number_of_files == 1 {
                     self.name_if_only_one_file.as_ref().unwrap().to_owned()
-                } else  if let Some(name) = self.name_all.as_ref() {
-                    name.to_owned()
-                }else {
+                } else if let Some(name) = self.name_all.as_ref() {
+                    let mut s = name.to_owned();
+
+                    if index != 0 {
+                        s.push_str(&format!(" ({})", index.to_string()));
+                    }
+
+                    s
+                } else {
                     (self.names_callback)(index, media)
                 };
-                
-                rsrc_downloader.with_name(filename);
+
+                match media.extension() {
+                    Some(ext) => {
+                        rsrc_downloader.with_name(format!("{}.{}", filename, ext.to_string_lossy()))
+                    }
+                    None => rsrc_downloader.with_name(filename),
+                };
 
                 let download_result = rsrc_downloader.download_to(&path).await;
 

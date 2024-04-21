@@ -26,7 +26,9 @@ async fn youtube() -> Result<(), DownloadError> {
                 .to_string(),
         );
 
-        downloader.download_to(Path::new("./tests-run/videos/")).await
+        downloader
+            .download_to(Path::new("./tests-run/videos/"))
+            .await
     }))
     .await;
 

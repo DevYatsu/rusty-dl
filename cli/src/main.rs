@@ -43,12 +43,8 @@ fn main() -> Result<(), DownloadError> {
             let mut downloader = TwitterDownloader::new(link.as_str()).unwrap();
 
             if let Some(name) = file_name {
-                fn callback_wrapper(i: usize, media: TwitterMedia) -> String {
-                    // Your closure code here
-                    name.to_owned()
-                }
 
-                downloader.set_name_callback(move |_i, media| name.to_owned());
+                // downloader.name_all();
             }
 
             downloader.into()
